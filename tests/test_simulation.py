@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pygame
 
-from game.simulation import MatchSimulation
+from game.simulation import MatchSimulation, StepEvents
 from game.utils import (
     BALL_SIZE,
     COLORS,
@@ -77,12 +77,14 @@ class MatchSimulationTests(unittest.TestCase):
         simulation.ball.vx = -260
         simulation.ball.vy = 0
 
-        simulation.step(0)
+        events = simulation.step(0)
 
+        self.assertEqual(events, StepEvents(left_return=True))
         self.assertGreater(simulation.ball.vx, 0)
         self.assertEqual(simulation.ball.x, paddle_rect.right + BALL_SIZE / 2)
         velocity_after_collision = simulation.ball.vx
-        simulation.step(0)
+        next_events = simulation.step(0)
+        self.assertEqual(next_events, StepEvents())
         self.assertEqual(simulation.ball.vx, velocity_after_collision)
 
     def test_right_paddle_collision_moves_ball_outside_paddle(self):
@@ -93,20 +95,23 @@ class MatchSimulationTests(unittest.TestCase):
         simulation.ball.vx = 260
         simulation.ball.vy = 0
 
-        simulation.step(0)
+        events = simulation.step(0)
 
+        self.assertEqual(events, StepEvents(right_return=True))
         self.assertLess(simulation.ball.vx, 0)
         self.assertEqual(simulation.ball.x, paddle_rect.left - BALL_SIZE / 2)
         velocity_after_collision = simulation.ball.vx
-        simulation.step(0)
+        next_events = simulation.step(0)
+        self.assertEqual(next_events, StepEvents())
         self.assertEqual(simulation.ball.vx, velocity_after_collision)
 
     def test_left_goal_increases_right_score_and_resets_ball(self):
         simulation = self.simulation
         simulation.ball.x = COURT_X - 31
 
-        simulation.step(0)
+        events = simulation.step(0)
 
+        self.assertEqual(events, StepEvents(point_winner="right"))
         self.assertEqual((simulation.score1, simulation.score2), (0, 1))
         self.assertEqual(
             (simulation.ball.x, simulation.ball.y),
@@ -117,8 +122,9 @@ class MatchSimulationTests(unittest.TestCase):
         simulation = self.simulation
         simulation.ball.x = COURT_X + COURT_W + 31
 
-        simulation.step(0)
+        events = simulation.step(0)
 
+        self.assertEqual(events, StepEvents(point_winner="left"))
         self.assertEqual((simulation.score1, simulation.score2), (1, 0))
         self.assertEqual(
             (simulation.ball.x, simulation.ball.y),
@@ -146,13 +152,45 @@ class MatchSimulationTests(unittest.TestCase):
             (COURT_X + COURT_W / 2, COURT_Y + COURT_H / 2),
         )
 
+    def test_ordinary_step_returns_empty_events(self):
+        before = (
+            self.simulation.score1,
+            self.simulation.score2,
+            self.simulation.ball.vx,
+            self.simulation.ball.vy,
+        )
+
+        events = self.simulation.step(0)
+
+        self.assertEqual(events, StepEvents())
+        self.assertEqual(
+            (
+                self.simulation.score1,
+                self.simulation.score2,
+                self.simulation.ball.vx,
+                self.simulation.ball.vy,
+            ),
+            before,
+        )
+
+    def test_reset_reuses_injected_rng_for_the_new_ball(self):
+        rng = random.Random(20260728)
+        simulation = MatchSimulation(rng=rng)
+        first_ball = simulation.ball
+
+        simulation.reset()
+
+        self.assertIsNot(simulation.ball, first_ball)
+        self.assertIs(simulation.ball.rng, rng)
+
     def test_simulation_does_not_create_a_display(self):
+        rng = random.Random(20260728)
         with patch.object(
             pygame.display,
             "set_mode",
             side_effect=AssertionError("simulation attempted to create a window"),
         ):
-            simulation = MatchSimulation()
+            simulation = MatchSimulation(rng=rng)
             simulation.step(1 / 60)
         self.assertIsNone(pygame.display.get_surface())
 

@@ -40,6 +40,25 @@ Direct script execution is also supported:
 python game/main.py
 ```
 
+## Headless match evaluation
+
+Run a deterministic bot-vs-bot match without creating a window:
+
+```powershell
+python -m game.match_runner --seed 20260728 --left 260,0,8 --right 300,0.1,12
+```
+
+Direct script execution is also supported:
+
+```powershell
+python game/match_runner.py --seed 20260728
+```
+
+The command prints one JSON object containing the score, returns by each bot,
+longest rally, winner, simulated duration, and termination reason. The seed
+makes repeated evaluations with the same genomes and configuration
+reproducible.
+
 ## Controls
 
 - Move the human paddle with the mouse while the pointer is over the court.
@@ -63,7 +82,7 @@ ai-ping-pong/
 ## Planned genetic algorithm integration
 
 A future step will create and evolve populations of `BotGenome` instances.
-Selection, crossover, mutation, fitness evaluation, headless training,
-training logs, and model persistence are not implemented at the current
-stage. The window-independent match simulation and parameterized controllers
-are only an architectural foundation for that future work.
+Scalar fitness, population management, selection, crossover, mutation,
+headless training, training logs, and model persistence are not implemented
+at the current stage. The deterministic match runner currently returns only
+raw evaluation metrics.

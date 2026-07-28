@@ -9,11 +9,12 @@ else:
 
 
 class Ball:
-    def __init__(self, x, y, vx=0.0, vy=0.0):
+    def __init__(self, x, y, vx=0.0, vy=0.0, rng=None):
         self.x = x
         self.y = y
         self.vx = vx
         self.vy = vy
+        self.rng = rng if rng is not None else random
 
     def rect(self):
         return pygame.Rect(int(self.x - BALL_SIZE / 2), int(self.y - BALL_SIZE / 2), BALL_SIZE, BALL_SIZE)
@@ -36,9 +37,9 @@ class Ball:
 
     def reset(self, x, y):
         self.x, self.y = x, y
-        direction = random.choice([-1, 1])
+        direction = self.rng.choice([-1, 1])
         self.vx = 260 * direction
-        self.vy = random.uniform(-100, 100)
+        self.vy = self.rng.uniform(-100, 100)
 
     def draw(self, surface):
         pygame.draw.circle(surface, COLORS["ball"], (int(self.x), int(self.y)), BALL_SIZE // 2)
