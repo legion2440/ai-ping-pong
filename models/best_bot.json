@@ -1,0 +1,37 @@
+{
+  "evolution_config": {
+    "crossover_rate": 0.8,
+    "elite_count": 2,
+    "generations": 8,
+    "mutation_rate": 0.2,
+    "mutation_sigma": 0.1,
+    "population_size": 16,
+    "seed": 20260728,
+    "tournament_size": 3
+  },
+  "fitness": 81.25,
+  "fitness_config": {
+    "match_config": {
+      "dt": 0.016666666666666666,
+      "max_steps": 1800,
+      "score_limit": 3
+    },
+    "opponent_genome": {
+      "movement_threshold": 8.0,
+      "paddle_speed": 260.0,
+      "reaction_time": 0.0
+    },
+    "return_weight": 1.0,
+    "score_weight": 100.0,
+    "seeds": [
+      20260728,
+      20260729
+    ]
+  },
+  "genome": {
+    "movement_threshold": 9.457155877690875,
+    "paddle_speed": 285.1405239321148,
+    "reaction_time": 0.09467365148934277
+  },
+  "schema_version": 1
+}

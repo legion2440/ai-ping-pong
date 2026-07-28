@@ -316,6 +316,115 @@ class EvolutionTests(unittest.TestCase):
 
         self.assertEqual(random.getstate(), state)
 
+    def test_callback_receives_each_history_instance_including_last(self):
+        evolution_config = EvolutionConfig(
+            population_size=3,
+            generations=3,
+            elite_count=1,
+            tournament_size=2,
+        )
+        received = []
+
+        with patch(
+            "ga.genetic_algorithm.evaluate_genome",
+            side_effect=lambda genome, config: evaluation_for(genome),
+        ):
+            result = evolve(
+                evolution_config,
+                FitnessConfig(seeds=(1,)),
+                on_generation=received.append,
+            )
+
+        self.assertEqual(len(received), evolution_config.generations)
+        self.assertEqual(
+            [stats.generation for stats in received],
+            list(range(evolution_config.generations)),
+        )
+        self.assertTrue(
+            all(
+                received_stats is history_stats
+                for received_stats, history_stats in zip(
+                    received,
+                    result.history,
+                )
+            )
+        )
+        self.assertIs(received[-1], result.history[-1])
+
+    def test_passive_callback_preserves_result_and_global_random_state(self):
+        evolution_config = EvolutionConfig(
+            population_size=3,
+            generations=2,
+            elite_count=1,
+            tournament_size=2,
+        )
+        fitness_config = FitnessConfig(seeds=(1,))
+        state = random.getstate()
+
+        with patch(
+            "ga.genetic_algorithm.evaluate_genome",
+            side_effect=lambda genome, config: evaluation_for(genome),
+        ):
+            without_callback = evolve(evolution_config, fitness_config)
+            with_callback = evolve(
+                evolution_config,
+                fitness_config,
+                on_generation=lambda stats: None,
+            )
+
+        self.assertEqual(without_callback, with_callback)
+        self.assertEqual(random.getstate(), state)
+
+    def test_invalid_callback_is_rejected_before_rng_or_population(self):
+        with patch(
+            "ga.genetic_algorithm.random.Random",
+        ) as random_constructor, patch(
+            "ga.genetic_algorithm.random_genome",
+        ) as genome_factory:
+            with self.assertRaisesRegex(TypeError, "on_generation"):
+                evolve(
+                    EvolutionConfig(
+                        population_size=2,
+                        generations=1,
+                        elite_count=1,
+                        tournament_size=2,
+                    ),
+                    FitnessConfig(seeds=(1,)),
+                    on_generation=True,
+                )
+
+        random_constructor.assert_not_called()
+        genome_factory.assert_not_called()
+
+    def test_callback_exception_is_not_suppressed(self):
+        class CallbackError(Exception):
+            pass
+
+        calls = []
+
+        def callback(stats):
+            calls.append(stats)
+            raise CallbackError("stop")
+
+        with patch(
+            "ga.genetic_algorithm.evaluate_genome",
+            side_effect=lambda genome, config: evaluation_for(genome),
+        ):
+            with self.assertRaisesRegex(CallbackError, "stop"):
+                evolve(
+                    EvolutionConfig(
+                        population_size=3,
+                        generations=2,
+                        elite_count=1,
+                        tournament_size=2,
+                    ),
+                    FitnessConfig(seeds=(1,)),
+                    on_generation=callback,
+                )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0].generation, 0)
+
     def test_evolve_rejects_invalid_config_objects(self):
         with self.assertRaises(TypeError):
             evolve("invalid", FitnessConfig())

@@ -9,7 +9,8 @@ Bot and Bot vs Bot modes. Match state and physics are separated into
 Bot behavior is parameterized by paddle speed, reaction time, and movement
 threshold. The UI currently uses a baseline genome matching the original bot
 behavior. Headless training now evolves an in-memory random population against
-that fixed baseline. Training does not change the frontend or save artifacts.
+that fixed baseline and saves deterministic progress and model artifacts.
+Training does not change the frontend.
 
 ## Requirements
 
@@ -110,6 +111,49 @@ state. The command prints one JSON object to stdout containing the best genome
 and the in-memory best/mean/worst fitness history for every evaluated
 generation.
 
+### Training output and artifacts
+
+During training, one progress line per generation is written to stderr. The
+final machine-readable result remains one JSON line in stdout. A successful
+run writes these files by default:
+
+- `logs/generations.csv`
+- `models/best_bot.json`
+
+Relative artifact paths are resolved from the directory where training was
+invoked. Override them with `--log-path` and `--model-path`.
+
+The CSV contains one row per generation with these columns:
+
+```text
+generation,best_fitness,mean_fitness,worst_fitness,paddle_speed,reaction_time,movement_threshold
+```
+
+The JSON model uses schema version `1` and contains the global best fitness,
+the best genome, the complete evolution config, and the complete fitness
+config. Saving this reusable model is an implemented bonus; it is not yet
+loaded by the GUI.
+
+Suppress progress while still saving artifacts:
+
+```powershell
+python -m ga.genetic_algorithm --quiet
+```
+
+Run without creating either artifact:
+
+```powershell
+python -m ga.genetic_algorithm --no-artifacts --quiet
+```
+
+Load and validate a saved genome programmatically:
+
+```python
+from ga.artifacts import load_best_genome
+
+genome = load_best_genome("models/best_bot.json")
+```
+
 ## Controls
 
 - Move the human paddle with the mouse while the pointer is over the court.
@@ -122,22 +166,21 @@ generation.
 ```text
 ai-ping-pong/
 ├── game/       # Pygame frontend, controllers, simulation, and entities
-├── ga/         # Genome, fitness, evolutionary operators, and training CLI
-├── logs/       # Future training logs
-├── models/     # Future saved bot parameters
+├── ga/         # GA, training CLI, and artifact serialization
+├── logs/       # Canonical per-generation fitness report
+├── models/     # Canonical saved best genome
 ├── tests/      # Test package
 ├── requirements.txt
 └── README.md
 ```
 
-## Planned training artifacts and integration
+## Planned training visualization and integration
 
-Training currently returns results only through JSON/stdout. The following
-items are intentionally not implemented yet:
+The following items are intentionally not implemented yet:
 
-- `logs/generations.csv`
-- Saving the best genome
 - A fitness chart
 - Loading the best genome into the GUI
+- Training inside the GUI
+- Training screenshots or GIFs
 - Evidence of improvement from a long training run
 - Late-generation versus early-generation evaluation

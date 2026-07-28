@@ -5,13 +5,20 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 import sys
 from pathlib import Path
 
+_INVOCATION_CWD_ENV = "_AI_PING_PONG_INVOCATION_CWD"
+
 if __name__ == "__main__" and __package__ is None:
     project_root = Path(__file__).resolve().parent.parent
+    os.environ[_INVOCATION_CWD_ENV] = os.getcwd()
     os.chdir(project_root)
     os.execv(
         sys.executable,
         [sys.executable, "-m", "ga.genetic_algorithm", *sys.argv[1:]],
     )
+
+INVOCATION_CWD = Path(
+    os.environ.pop(_INVOCATION_CWD_ENV, os.getcwd())
+).resolve()
 
 import argparse
 import json
@@ -22,6 +29,7 @@ from numbers import Real
 
 from game.match_runner import MatchConfig
 
+from .artifacts import write_best_genome_json, write_generations_csv
 from .crossover import blend_crossover
 from .fitness import FitnessConfig, GenomeEvaluation, evaluate_genome
 from .genome import (
@@ -169,11 +177,15 @@ def random_genome(rng: random.Random) -> BotGenome:
 def evolve(
     evolution_config: EvolutionConfig = EvolutionConfig(),
     fitness_config: FitnessConfig = FitnessConfig(),
+    *,
+    on_generation=None,
 ) -> EvolutionResult:
     if not isinstance(evolution_config, EvolutionConfig):
         raise TypeError("evolution_config must be an EvolutionConfig")
     if not isinstance(fitness_config, FitnessConfig):
         raise TypeError("fitness_config must be a FitnessConfig")
+    if on_generation is not None and not callable(on_generation):
+        raise TypeError("on_generation must be callable or None")
 
     rng = random.Random(evolution_config.seed)
     population = [
@@ -200,18 +212,20 @@ def evolve(
             sum(evaluation.fitness for evaluation in evaluations)
             / len(evaluations)
         )
-        history.append(
-            GenerationStats(
-                generation=generation,
-                best_genome=generation_best.genome,
-                best_fitness=generation_best.fitness,
-                mean_fitness=mean_fitness,
-                worst_fitness=generation_worst.fitness,
-            )
+        stats = GenerationStats(
+            generation=generation,
+            best_genome=generation_best.genome,
+            best_fitness=generation_best.fitness,
+            mean_fitness=mean_fitness,
+            worst_fitness=generation_worst.fitness,
         )
+        history.append(stats)
 
         if global_best is None or generation_best.fitness > global_best.fitness:
             global_best = generation_best
+
+        if on_generation is not None:
+            on_generation(stats)
 
         if generation == evolution_config.generations - 1:
             break
@@ -354,7 +368,40 @@ def _build_parser():
         type=float,
         default=fitness_defaults.return_weight,
     )
+    parser.add_argument(
+        "--log-path",
+        type=Path,
+        default=Path("logs/generations.csv"),
+    )
+    parser.add_argument(
+        "--model-path",
+        type=Path,
+        default=Path("models/best_bot.json"),
+    )
+    parser.add_argument("--no-artifacts", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
     return parser
+
+
+def _resolve_artifact_path(path):
+    path = Path(path)
+    if path.is_absolute():
+        return path
+    return INVOCATION_CWD / path
+
+
+def _report_generation(stats):
+    genome = stats.best_genome
+    print(
+        f"generation={stats.generation} "
+        f"best={stats.best_fitness} "
+        f"mean={stats.mean_fitness} "
+        f"worst={stats.worst_fitness} "
+        f"genome={genome.paddle_speed},"
+        f"{genome.reaction_time},"
+        f"{genome.movement_threshold}",
+        file=sys.stderr,
+    )
 
 
 def main(argv=None):
@@ -383,9 +430,26 @@ def main(argv=None):
             score_weight=args.score_weight,
             return_weight=args.return_weight,
         )
-        result = evolve(evolution_config, fitness_config)
+        result = evolve(
+            evolution_config,
+            fitness_config,
+            on_generation=None if args.quiet else _report_generation,
+        )
     except (TypeError, ValueError) as error:
         parser.error(str(error))
+
+    if not args.no_artifacts:
+        try:
+            write_generations_csv(
+                result,
+                _resolve_artifact_path(args.log_path),
+            )
+            write_best_genome_json(
+                result,
+                _resolve_artifact_path(args.model_path),
+            )
+        except (OSError, ValueError) as error:
+            parser.error(str(error))
 
     print(json.dumps(result.to_dict(), sort_keys=True))
 
