@@ -1,8 +1,10 @@
 import csv
 import io
 import json
+import math
 import os
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 from .genome import BotGenome
@@ -17,6 +19,15 @@ CSV_HEADER = (
     "movement_threshold",
 )
 SCHEMA_VERSION = 1
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationRecord:
+    generation: int
+    best_fitness: float
+    mean_fitness: float
+    worst_fitness: float
+    genome: BotGenome
 
 
 def _atomic_write_text(path, content):
@@ -69,6 +80,75 @@ def write_generations_csv(result, path):
         )
 
     _atomic_write_text(path, output.getvalue())
+
+
+def load_generation_history(path) -> tuple[GenerationRecord, ...]:
+    try:
+        with Path(path).open(encoding="utf-8", newline="") as history_file:
+            reader = csv.DictReader(history_file, strict=True)
+            if tuple(reader.fieldnames or ()) != CSV_HEADER:
+                raise ValueError(
+                    "generation history must use the exact canonical header"
+                )
+
+            records = []
+            for expected_generation, row in enumerate(reader):
+                if None in row or any(row[field] is None for field in CSV_HEADER):
+                    raise ValueError(
+                        "generation history row does not match the header"
+                    )
+
+                try:
+                    generation = int(row["generation"])
+                except ValueError as error:
+                    raise ValueError(
+                        "generation must be an integer"
+                    ) from error
+                if generation != expected_generation:
+                    raise ValueError(
+                        "generations must be consecutive and start at zero"
+                    )
+
+                numeric_values = {}
+                for field in CSV_HEADER[1:]:
+                    try:
+                        value = float(row[field])
+                    except ValueError as error:
+                        raise ValueError(
+                            f"{field} must be a number"
+                        ) from error
+                    if not math.isfinite(value):
+                        raise ValueError(f"{field} must be finite")
+                    numeric_values[field] = value
+
+                try:
+                    genome = BotGenome(
+                        paddle_speed=numeric_values["paddle_speed"],
+                        reaction_time=numeric_values["reaction_time"],
+                        movement_threshold=numeric_values[
+                            "movement_threshold"
+                        ],
+                    )
+                except (TypeError, ValueError) as error:
+                    raise ValueError(
+                        "generation history contains an invalid genome"
+                    ) from error
+
+                records.append(
+                    GenerationRecord(
+                        generation=generation,
+                        best_fitness=numeric_values["best_fitness"],
+                        mean_fitness=numeric_values["mean_fitness"],
+                        worst_fitness=numeric_values["worst_fitness"],
+                        genome=genome,
+                    )
+                )
+    except csv.Error as error:
+        raise ValueError("generation history contains invalid CSV") from error
+
+    if not records:
+        raise ValueError("generation history must contain at least one row")
+    return tuple(records)
 
 
 def write_best_genome_json(result, path):

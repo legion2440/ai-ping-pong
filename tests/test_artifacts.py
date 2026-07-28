@@ -6,7 +6,9 @@ from unittest.mock import patch
 
 from ga.artifacts import (
     CSV_HEADER,
+    GenerationRecord,
     load_best_genome,
+    load_generation_history,
     write_best_genome_json,
     write_generations_csv,
 )
@@ -111,6 +113,164 @@ class GenerationsCsvTests(unittest.TestCase):
 
         self.assertTrue(content.endswith(b"\n"))
         self.assertNotIn(b"\r\n", content)
+
+
+class GenerationHistoryLoadingTests(unittest.TestCase):
+    def _write_history(self, directory, rows, header=CSV_HEADER):
+        path = Path(directory) / "generations.csv"
+        lines = [",".join(header)]
+        lines.extend(",".join(str(value) for value in row) for row in rows)
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return path
+
+    def test_canonical_history_loads_in_order_with_converted_values(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write_history(
+                directory,
+                [
+                    (0, 10.5, 2.25, -5, 200, 0.1, 5),
+                    (1, 20, 12.75, 1.5, 320, 0.05, 8),
+                ],
+            )
+
+            records = load_generation_history(path)
+
+        self.assertEqual(
+            records,
+            (
+                GenerationRecord(
+                    generation=0,
+                    best_fitness=10.5,
+                    mean_fitness=2.25,
+                    worst_fitness=-5.0,
+                    genome=FIRST_GENOME,
+                ),
+                GenerationRecord(
+                    generation=1,
+                    best_fitness=20.0,
+                    mean_fitness=12.75,
+                    worst_fitness=1.5,
+                    genome=BEST_GENOME,
+                ),
+            ),
+        )
+        self.assertIsInstance(records, tuple)
+        self.assertIsInstance(records[0].generation, int)
+        self.assertIsInstance(records[0].best_fitness, float)
+
+    def test_writer_and_loader_round_trip(self):
+        result = sample_result()
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "generations.csv"
+            write_generations_csv(result, path)
+
+            records = load_generation_history(str(path))
+
+        self.assertEqual(
+            [record.genome for record in records],
+            [stats.best_genome for stats in result.history],
+        )
+        self.assertEqual(
+            [record.best_fitness for record in records],
+            [stats.best_fitness for stats in result.history],
+        )
+
+    def test_empty_file_and_header_only_file_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            empty_path = Path(directory) / "empty.csv"
+            empty_path.write_text("", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_generation_history(empty_path)
+
+            header_only_path = Path(directory) / "header-only.csv"
+            header_only_path.write_text(
+                ",".join(CSV_HEADER) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "at least one"):
+                load_generation_history(header_only_path)
+
+    def test_header_must_have_exact_columns_and_order(self):
+        invalid_headers = (
+            CSV_HEADER[:-1],
+            CSV_HEADER + ("extra",),
+            tuple(reversed(CSV_HEADER)),
+        )
+
+        for header in invalid_headers:
+            with self.subTest(header=header):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = self._write_history(
+                        directory,
+                        [(0, 1, 1, 1, 200, 0.1, 5)],
+                        header=header,
+                    )
+
+                    with self.assertRaisesRegex(ValueError, "header"):
+                        load_generation_history(path)
+
+    def test_row_must_match_header_width(self):
+        for row in (
+            (0, 1, 1, 1, 200, 0.1),
+            (0, 1, 1, 1, 200, 0.1, 5, "extra"),
+        ):
+            with self.subTest(row=row):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = self._write_history(directory, [row])
+
+                    with self.assertRaisesRegex(ValueError, "header"):
+                        load_generation_history(path)
+
+    def test_fitness_values_must_be_numeric_and_finite(self):
+        for value in ("invalid", "nan", "inf", "-inf"):
+            with self.subTest(value=value):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = self._write_history(
+                        directory,
+                        [(0, value, 1, 1, 200, 0.1, 5)],
+                    )
+
+                    with self.assertRaises(ValueError):
+                        load_generation_history(path)
+
+    def test_invalid_genome_is_rejected_with_original_cause(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write_history(
+                directory,
+                [(0, 1, 1, 1, 1000, 0.1, 5)],
+            )
+
+            with self.assertRaisesRegex(ValueError, "invalid genome") as raised:
+                load_generation_history(path)
+
+        self.assertIsInstance(raised.exception.__cause__, ValueError)
+
+    def test_generations_must_start_at_zero_without_gaps_or_duplicates(self):
+        invalid_generations = (
+            (1,),
+            (0, 2),
+            (0, 0),
+        )
+
+        for generations in invalid_generations:
+            with self.subTest(generations=generations):
+                with tempfile.TemporaryDirectory() as directory:
+                    rows = [
+                        (generation, 1, 1, 1, 200, 0.1, 5)
+                        for generation in generations
+                    ]
+                    path = self._write_history(directory, rows)
+
+                    with self.assertRaisesRegex(ValueError, "consecutive"):
+                        load_generation_history(path)
+
+    def test_missing_file_preserves_file_not_found_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "missing.csv"
+
+            with self.assertRaises(FileNotFoundError):
+                load_generation_history(path)
 
 
 class BestGenomeJsonTests(unittest.TestCase):

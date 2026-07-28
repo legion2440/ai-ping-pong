@@ -8,9 +8,10 @@ Bot and Bot vs Bot modes. Match state and physics are separated into
 
 Bot behavior is parameterized by paddle speed, reaction time, and movement
 threshold. The UI currently uses a baseline genome matching the original bot
-behavior. Headless training now evolves an in-memory random population against
-that fixed baseline and saves deterministic progress and model artifacts.
-Training does not change the frontend.
+behavior as the fixed training opponent. Headless training evolves an
+in-memory random population and saves deterministic progress and model
+artifacts. The frontend loads those artifacts to replay trained bots, but does
+not run training itself.
 
 ## Requirements
 
@@ -41,6 +42,31 @@ Direct script execution is also supported:
 ```powershell
 python game/main.py
 ```
+
+By default, the frontend loads:
+
+- `models/best_bot.json` for Human vs Bot
+- `logs/generations.csv` for Bot vs Bot generation replay
+
+Human vs Bot uses the saved global best genome. Bot vs Bot compares the
+selected generation champion on the left with generation `0` on the right.
+Use the left and right arrow keys to change the selected generation. This is a
+visual replay, not formal evidence that a later generation outperforms an
+earlier one.
+
+Custom artifacts can be supplied explicitly:
+
+```powershell
+python -m game.main `
+    --model-path models/best_bot.json `
+    --generations-path logs/generations.csv
+```
+
+Canonical defaults are resolved from the repository root. Explicit relative
+paths are resolved from the directory where the command was invoked, while
+absolute paths are used unchanged. Missing, malformed, or mutually
+inconsistent artifacts produce an explicit CLI error before Pygame opens a
+window; there is no baseline fallback.
 
 ## Headless match evaluation
 
@@ -158,6 +184,7 @@ genome = load_best_genome("models/best_bot.json")
 
 - Move the human paddle with the mouse while the pointer is over the court.
 - Use `W`/`S` or the up/down arrow keys to move the human paddle.
+- In Bot vs Bot, use the left/right arrow keys to change generation.
 - Press `Esc` during a match to return to the menu.
 - Close the window to exit.
 
@@ -179,7 +206,6 @@ ai-ping-pong/
 The following items are intentionally not implemented yet:
 
 - A fitness chart
-- Loading the best genome into the GUI
 - Training inside the GUI
 - Training screenshots or GIFs
 - Evidence of improvement from a long training run

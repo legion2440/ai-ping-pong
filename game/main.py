@@ -1,24 +1,33 @@
-"""Visual frontend for the AI ping-pong project (Pygame).
-
-Pure rendering / game-loop layer: menu, human-vs-bot, bot-vs-bot. Bot behavior
-is routed through parameterized controllers, with no evolutionary training
-attached yet.
-"""
+"""Visual frontend for trained AI ping-pong bots."""
 import os
+
+os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
+
 import sys
 from pathlib import Path
 
+_INVOCATION_CWD_ENV = "_AI_PING_PONG_GAME_INVOCATION_CWD"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 if __name__ == "__main__" and __package__ is None:
-    project_root = Path(__file__).resolve().parent.parent
-    os.chdir(project_root)
+    os.environ[_INVOCATION_CWD_ENV] = os.getcwd()
+    os.chdir(PROJECT_ROOT)
     os.execv(
         sys.executable,
         [sys.executable, "-m", "game.main", *sys.argv[1:]],
     )
 
+INVOCATION_CWD = Path(
+    os.environ.pop(_INVOCATION_CWD_ENV, os.getcwd())
+).resolve()
+
+import argparse
+
 import pygame
 
-from .controllers import BaselineController, HumanController
+from ga.artifacts import load_best_genome, load_generation_history
+
+from .controllers import BotController, HumanController
 from .simulation import MatchSimulation
 from .utils import (
     COLORS,
@@ -36,7 +45,11 @@ MENU, HUMAN, BOTVBOT = "menu", "human", "botvbot"
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, best_genome, generation_records):
+        self.best_genome = best_genome
+        self.generation_records = tuple(generation_records)
+        self.generation_index = 0
+
         pygame.init()
         pygame.display.set_caption("PONG // EVOLVE - visual frontend")
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
@@ -76,14 +89,39 @@ class Game:
 
     def start(self, state):
         self.state = state
+        if state == BOTVBOT:
+            self.generation_index = 0
         self._reset_court()
+
         if state == HUMAN:
             self.left_controller = HumanController()
+            self.right_controller = BotController(self.best_genome)
         else:
-            self.left_controller = BaselineController()
-        self.right_controller = BaselineController()
+            self._create_generation_controllers()
+
         self.left_controller.reset()
         self.right_controller.reset()
+
+    def _create_generation_controllers(self):
+        current = self.generation_records[self.generation_index]
+        initial = self.generation_records[0]
+        self.left_controller = BotController(current.genome)
+        self.right_controller = BotController(initial.genome)
+
+    def change_generation(self, offset):
+        if self.state != BOTVBOT:
+            return
+
+        new_index = min(
+            len(self.generation_records) - 1,
+            max(0, self.generation_index + offset),
+        )
+        if new_index == self.generation_index:
+            return
+
+        self.generation_index = new_index
+        self._reset_court()
+        self._create_generation_controllers()
 
     # ---- input -----------------------------------------------------------
     def handle_event(self, event):
@@ -92,6 +130,11 @@ class Game:
             sys.exit()
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.state = MENU
+        if event.type == pygame.KEYDOWN and self.state == BOTVBOT:
+            if event.key == pygame.K_LEFT:
+                self.change_generation(-1)
+            elif event.key == pygame.K_RIGHT:
+                self.change_generation(1)
         if event.type == pygame.MOUSEBUTTONDOWN and self.state == MENU:
             for rect, target in self.menu_buttons:
                 if rect.collidepoint(event.pos):
@@ -128,8 +171,8 @@ class Game:
 
         self.menu_buttons = []
         labels = [
-            ("HUMAN VS BOT", "Play against the current best bot.", HUMAN, COLORS["cyan"]),
-            ("BOT VS BOT", "Watch two bots battle.", BOTVBOT, COLORS["lime"]),
+            ("HUMAN VS BOT", "Play against the saved best bot.", HUMAN, COLORS["cyan"]),
+            ("BOT VS BOT", "Compare generation champions with generation 0.", BOTVBOT, COLORS["lime"]),
         ]
         btn_w, btn_h, gap = 320, 130, 24
         start_x = (SCREEN_W - (btn_w * 2 + gap)) // 2
@@ -146,14 +189,25 @@ class Game:
 
     def draw_hud(self):
         s = self.screen
-        p1_label = "YOU" if self.state == HUMAN else "BOT A"
-        p2_label = "BOT" if self.state == HUMAN else "BOT B"
+        if self.state == HUMAN:
+            p1_label = "YOU"
+            p2_label = "BEST BOT"
+            mode_label = "HUMAN VS BOT"
+        else:
+            current = self.generation_records[self.generation_index]
+            initial = self.generation_records[0]
+            p1_label = f"GEN {current.generation}"
+            p2_label = f"GEN {initial.generation}"
+            mode_label = (
+                f"BOT VS BOT · {self.generation_index + 1}/"
+                f"{len(self.generation_records)} · "
+                f"FITNESS {current.best_fitness}"
+            )
 
         draw_text(s, p1_label, (COURT_X + 40, 45), 12, COLORS["muted"])
         draw_text(s, str(self.score1), (COURT_X + 40, 62), 30, COLORS["cyan"], bold=True)
 
         cx = SCREEN_W // 2
-        mode_label = "HUMAN VS BOT" if self.state == HUMAN else "BOT VS BOT"
         draw_text(s, mode_label, (cx, 40), 15, COLORS["muted"], center=True)
 
         draw_text(s, p2_label, (COURT_X + COURT_W - 90, 45), 12, COLORS["muted"])
@@ -181,7 +235,9 @@ class Game:
         self.draw_hud()
         self.draw_court()
         if self.state == HUMAN:
-            draw_text(self.screen, "UP/W  ·  DOWN/S  ·  MOUSE - MOVE PADDLE", (SCREEN_W // 2, COURT_Y + COURT_H + 26), 13, COLORS["muted"], center=True)
+            draw_text(self.screen, "UP/W  ·  DOWN/S  ·  MOUSE - MOVE PADDLE", (SCREEN_W // 2, SCREEN_H - 10), 13, COLORS["muted"], center=True)
+        else:
+            draw_text(self.screen, "LEFT/RIGHT  ·  CHANGE GENERATION", (SCREEN_W // 2, SCREEN_H - 10), 13, COLORS["muted"], center=True)
 
     def draw(self):
         if self.state == MENU:
@@ -199,5 +255,48 @@ class Game:
             self.draw()
 
 
+def _build_parser():
+    parser = argparse.ArgumentParser(
+        description="Run the visual AI ping-pong frontend"
+    )
+    parser.add_argument("--model-path", type=Path, default=None)
+    parser.add_argument("--generations-path", type=Path, default=None)
+    return parser
+
+
+def _resolve_artifact_path(path, canonical_path):
+    if path is None:
+        return PROJECT_ROOT / canonical_path
+    if path.is_absolute():
+        return path
+    return INVOCATION_CWD / path
+
+
+def main(argv=None):
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    model_path = _resolve_artifact_path(
+        args.model_path,
+        Path("models/best_bot.json"),
+    )
+    generations_path = _resolve_artifact_path(
+        args.generations_path,
+        Path("logs/generations.csv"),
+    )
+
+    try:
+        best_genome = load_best_genome(model_path)
+        generation_records = load_generation_history(generations_path)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+
+    if best_genome != generation_records[-1].genome:
+        parser.error(
+            "best model genome does not match the final generation champion"
+        )
+
+    Game(best_genome, generation_records).run()
+
+
 if __name__ == "__main__":
-    Game().run()
+    main()
