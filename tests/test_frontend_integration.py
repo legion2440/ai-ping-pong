@@ -51,6 +51,62 @@ def create_game(best_genome=BEST_GENOME, records=GENERATION_RECORDS):
         return Game(best_genome, records)
 
 
+class GameValidationTests(unittest.TestCase):
+    def _assert_rejected_before_pygame(
+        self,
+        exception_type,
+        message,
+        best_genome,
+        records,
+    ):
+        with patch("game.main.pygame.init") as pygame_init, patch(
+            "game.main.pygame.display.set_caption"
+        ) as set_caption, patch(
+            "game.main.pygame.display.set_mode"
+        ) as set_mode, patch(
+            "game.main.pygame.time.Clock"
+        ) as clock:
+            with self.assertRaisesRegex(exception_type, message):
+                Game(best_genome, records)
+
+        pygame_init.assert_not_called()
+        set_caption.assert_not_called()
+        set_mode.assert_not_called()
+        clock.assert_not_called()
+
+    def test_best_genome_must_be_bot_genome(self):
+        self._assert_rejected_before_pygame(
+            TypeError,
+            "best_genome must be a BotGenome",
+            BEST_GENOME.to_dict(),
+            GENERATION_RECORDS,
+        )
+
+    def test_generation_records_must_be_iterable(self):
+        self._assert_rejected_before_pygame(
+            TypeError,
+            "generation_records must be an iterable",
+            BEST_GENOME,
+            None,
+        )
+
+    def test_generation_records_must_not_be_empty(self):
+        self._assert_rejected_before_pygame(
+            ValueError,
+            "generation_records must not be empty",
+            BEST_GENOME,
+            (),
+        )
+
+    def test_every_generation_record_must_have_the_expected_type(self):
+        self._assert_rejected_before_pygame(
+            TypeError,
+            "generation_records must contain only GenerationRecord values",
+            BEST_GENOME,
+            (GENERATION_RECORDS[0], BEST_GENOME),
+        )
+
+
 class FrontendControllerIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.random_state = random.getstate()

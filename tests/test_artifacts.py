@@ -210,6 +210,30 @@ class GenerationHistoryLoadingTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "header"):
                         load_generation_history(path)
 
+    def test_header_error_reports_physical_line_one(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write_history(
+                directory,
+                [(0, 1, 1, 1, 200, 0.1, 5)],
+                header=tuple(reversed(CSV_HEADER)),
+            )
+
+            with self.assertRaisesRegex(ValueError, r"line 1\b"):
+                load_generation_history(path)
+
+    def test_row_error_reports_physical_csv_line(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "generations.csv"
+            path.write_text(
+                ",".join(CSV_HEADER)
+                + "\n\n"
+                + "0,invalid,1,1,200,0.1,5\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, r"line 3\b"):
+                load_generation_history(path)
+
     def test_row_must_match_header_width(self):
         for row in (
             (0, 1, 1, 1, 200, 0.1),

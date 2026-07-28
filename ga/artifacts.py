@@ -83,29 +83,35 @@ def write_generations_csv(result, path):
 
 
 def load_generation_history(path) -> tuple[GenerationRecord, ...]:
+    reader = None
     try:
         with Path(path).open(encoding="utf-8", newline="") as history_file:
             reader = csv.DictReader(history_file, strict=True)
             if tuple(reader.fieldnames or ()) != CSV_HEADER:
                 raise ValueError(
-                    "generation history must use the exact canonical header"
+                    "generation history line 1 must use the exact "
+                    "canonical header"
                 )
 
             records = []
             for expected_generation, row in enumerate(reader):
+                line_number = reader.line_num
                 if None in row or any(row[field] is None for field in CSV_HEADER):
                     raise ValueError(
-                        "generation history row does not match the header"
+                        f"generation history line {line_number} does not "
+                        "match the header"
                     )
 
                 try:
                     generation = int(row["generation"])
                 except ValueError as error:
                     raise ValueError(
+                        f"generation history line {line_number}: "
                         "generation must be an integer"
                     ) from error
                 if generation != expected_generation:
                     raise ValueError(
+                        f"generation history line {line_number}: "
                         "generations must be consecutive and start at zero"
                     )
 
@@ -115,10 +121,14 @@ def load_generation_history(path) -> tuple[GenerationRecord, ...]:
                         value = float(row[field])
                     except ValueError as error:
                         raise ValueError(
+                            f"generation history line {line_number}: "
                             f"{field} must be a number"
                         ) from error
                     if not math.isfinite(value):
-                        raise ValueError(f"{field} must be finite")
+                        raise ValueError(
+                            f"generation history line {line_number}: "
+                            f"{field} must be finite"
+                        )
                     numeric_values[field] = value
 
                 try:
@@ -131,7 +141,8 @@ def load_generation_history(path) -> tuple[GenerationRecord, ...]:
                     )
                 except (TypeError, ValueError) as error:
                     raise ValueError(
-                        "generation history contains an invalid genome"
+                        f"generation history line {line_number} contains "
+                        "an invalid genome"
                     ) from error
 
                 records.append(
@@ -144,10 +155,15 @@ def load_generation_history(path) -> tuple[GenerationRecord, ...]:
                     )
                 )
     except csv.Error as error:
-        raise ValueError("generation history contains invalid CSV") from error
+        line_number = reader.line_num if reader is not None else 1
+        raise ValueError(
+            f"generation history line {line_number} contains invalid CSV"
+        ) from error
 
     if not records:
-        raise ValueError("generation history must contain at least one row")
+        raise ValueError(
+            "generation history line 1 must be followed by at least one row"
+        )
     return tuple(records)
 
 

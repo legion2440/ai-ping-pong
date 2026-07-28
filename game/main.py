@@ -25,7 +25,12 @@ import argparse
 
 import pygame
 
-from ga.artifacts import load_best_genome, load_generation_history
+from ga.artifacts import (
+    GenerationRecord,
+    load_best_genome,
+    load_generation_history,
+)
+from ga.genome import BotGenome
 
 from .controllers import BotController, HumanController
 from .simulation import MatchSimulation
@@ -46,8 +51,27 @@ MENU, HUMAN, BOTVBOT = "menu", "human", "botvbot"
 
 class Game:
     def __init__(self, best_genome, generation_records):
+        if not isinstance(best_genome, BotGenome):
+            raise TypeError("best_genome must be a BotGenome")
+
+        try:
+            generation_records = tuple(generation_records)
+        except TypeError as error:
+            raise TypeError(
+                "generation_records must be an iterable"
+            ) from error
+        if not generation_records:
+            raise ValueError("generation_records must not be empty")
+        if any(
+            not isinstance(record, GenerationRecord)
+            for record in generation_records
+        ):
+            raise TypeError(
+                "generation_records must contain only GenerationRecord values"
+            )
+
         self.best_genome = best_genome
-        self.generation_records = tuple(generation_records)
+        self.generation_records = generation_records
         self.generation_index = 0
 
         pygame.init()
