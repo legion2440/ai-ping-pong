@@ -33,10 +33,12 @@ class Paddle:
         (reaction threshold) so movement doesn't jitter.
         """
         diff = target_y - self.y
-        if abs(diff) < threshold:
+        if abs(diff) <= threshold:
             return
-        step = speed_cap * dt
-        self.y += max(-step, min(step, diff))
+
+        remaining = abs(diff) - threshold
+        step = min(speed_cap * dt, remaining)
+        self.y += step if diff > 0 else -step
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect(), border_radius=3)
