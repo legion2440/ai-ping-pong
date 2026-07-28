@@ -8,7 +8,8 @@ Bot and Bot vs Bot modes. Match state and physics are separated into
 
 Bot behavior is parameterized by paddle speed, reaction time, and movement
 threshold. The UI currently uses a baseline genome matching the original bot
-behavior. A random population and the genetic algorithm are not connected yet.
+behavior. Headless training now evolves an in-memory random population against
+that fixed baseline. Training does not change the frontend or save artifacts.
 
 ## Requirements
 
@@ -59,6 +60,56 @@ longest rally, winner, simulated duration, and termination reason. The seed
 makes repeated evaluations with the same genomes and configuration
 reproducible.
 
+## Genetic algorithm training
+
+Run deterministic headless training:
+
+```powershell
+python -m ga.genetic_algorithm --population-size 8 --generations 3
+```
+
+Direct script execution is also supported:
+
+```powershell
+python ga/genetic_algorithm.py --population-size 8 --generations 3
+```
+
+Each candidate plays the fixed baseline twice for every match seed: first as
+the left bot and then as the right bot. Fitness is maximized and calculated
+for each match as:
+
+```text
+score_weight * (candidate_score - opponent_score)
+    + return_weight * candidate_returns
+```
+
+The final fitness is the mean across all `2 * len(match_seeds)` matches.
+Negative fitness is valid. The evolutionary cycle uses tournament selection,
+per-gene blend crossover, per-gene Gaussian mutation, and direct elitism.
+
+Default training parameters:
+
+- Evolution seed: `20260728`
+- Population size: `16`
+- Evaluated generations: `8`
+- Elite count: `2`
+- Tournament size: `3`
+- Crossover rate: `0.8`
+- Mutation rate: `0.2`
+- Mutation sigma: `0.10` of each gene's full range
+- Match seeds: `20260728,20260729`
+- Match limit: `1800` steps or `3` points
+- Baseline opponent: `260,0,8`
+- Score weight: `100.0`
+- Return weight: `1.0`
+
+The evolution seed controls initial genomes, selection, crossover, and
+mutation. Match seeds independently control match physics. Reusing all
+arguments produces the same result without changing Python's global random
+state. The command prints one JSON object to stdout containing the best genome
+and the in-memory best/mean/worst fitness history for every evaluated
+generation.
+
 ## Controls
 
 - Move the human paddle with the mouse while the pointer is over the court.
@@ -71,7 +122,7 @@ reproducible.
 ```text
 ai-ping-pong/
 ├── game/       # Pygame frontend, controllers, simulation, and entities
-├── ga/         # Parameterized bot genome; evolutionary algorithm pending
+├── ga/         # Genome, fitness, evolutionary operators, and training CLI
 ├── logs/       # Future training logs
 ├── models/     # Future saved bot parameters
 ├── tests/      # Test package
@@ -79,10 +130,14 @@ ai-ping-pong/
 └── README.md
 ```
 
-## Planned genetic algorithm integration
+## Planned training artifacts and integration
 
-A future step will create and evolve populations of `BotGenome` instances.
-Scalar fitness, population management, selection, crossover, mutation,
-headless training, training logs, and model persistence are not implemented
-at the current stage. The deterministic match runner currently returns only
-raw evaluation metrics.
+Training currently returns results only through JSON/stdout. The following
+items are intentionally not implemented yet:
+
+- `logs/generations.csv`
+- Saving the best genome
+- A fitness chart
+- Loading the best genome into the GUI
+- Evidence of improvement from a long training run
+- Late-generation versus early-generation evaluation
