@@ -9,10 +9,8 @@ import sys
 import pygame
 
 if __package__:
-    from .ball import Ball
-    from .paddle import Paddle
+    from .simulation import MatchSimulation
     from .utils import (
-        BALL_SIZE,
         BOT_BASE_SPEED,
         COLORS,
         COURT_H,
@@ -20,17 +18,13 @@ if __package__:
         COURT_X,
         COURT_Y,
         FPS,
-        HUMAN_SPEED,
-        PADDLE_MARGIN,
         SCREEN_H,
         SCREEN_W,
         draw_text,
     )
 else:
-    from ball import Ball
-    from paddle import Paddle
+    from simulation import MatchSimulation
     from utils import (
-        BALL_SIZE,
         BOT_BASE_SPEED,
         COLORS,
         COURT_H,
@@ -38,8 +32,6 @@ else:
         COURT_X,
         COURT_Y,
         FPS,
-        HUMAN_SPEED,
-        PADDLE_MARGIN,
         SCREEN_H,
         SCREEN_W,
         draw_text,
@@ -60,13 +52,30 @@ class Game:
         self._reset_court()
 
     def _reset_court(self):
-        cy = COURT_Y + COURT_H / 2
-        self.p1 = Paddle(COURT_X + PADDLE_MARGIN, cy, COLORS["cyan"], HUMAN_SPEED)
-        self.p2 = Paddle(COURT_X + COURT_W - PADDLE_MARGIN, cy, COLORS["lime"], HUMAN_SPEED)
-        self.ball = Ball(COURT_X + COURT_W / 2, cy)
-        self.ball.reset(COURT_X + COURT_W / 2, cy)
-        self.score1 = 0
-        self.score2 = 0
+        if hasattr(self, "simulation"):
+            self.simulation.reset()
+        else:
+            self.simulation = MatchSimulation()
+
+    @property
+    def p1(self):
+        return self.simulation.p1
+
+    @property
+    def p2(self):
+        return self.simulation.p2
+
+    @property
+    def ball(self):
+        return self.simulation.ball
+
+    @property
+    def score1(self):
+        return self.simulation.score1
+
+    @property
+    def score2(self):
+        return self.simulation.score2
 
     def start(self, state):
         self.state = state
@@ -107,22 +116,7 @@ class Game:
         self.p2.track(self.ball.y, speed_cap, dt)
         self.p2.clamp(COURT_Y, COURT_Y + COURT_H)
 
-        self.ball.update(dt, COURT_Y, COURT_Y + COURT_H)
-
-        p1r, p2r, br = self.p1.rect(), self.p2.rect(), self.ball.rect()
-        if self.ball.vx < 0 and br.colliderect(p1r):
-            self.ball.x = p1r.right + BALL_SIZE / 2
-            self.ball.bounce_off_paddle(self.p1.y, 1)
-        if self.ball.vx > 0 and br.colliderect(p2r):
-            self.ball.x = p2r.left - BALL_SIZE / 2
-            self.ball.bounce_off_paddle(self.p2.y, -1)
-
-        if self.ball.x < COURT_X - 30:
-            self.score2 += 1
-            self.ball.reset(COURT_X + COURT_W / 2, COURT_Y + COURT_H / 2)
-        elif self.ball.x > COURT_X + COURT_W + 30:
-            self.score1 += 1
-            self.ball.reset(COURT_X + COURT_W / 2, COURT_Y + COURT_H / 2)
+        self.simulation.step(dt)
 
     # ---- draw --------------------------------------------------------------
     def draw_grid(self, surface):
