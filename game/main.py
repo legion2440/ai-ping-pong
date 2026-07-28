@@ -1,41 +1,36 @@
 """Visual frontend for the AI ping-pong project (Pygame).
 
-Pure rendering / game-loop layer: menu, human-vs-bot, bot-vs-bot. The bot
-paddle is a primitive fixed-speed tracker (Paddle.track) with no learning
-attached — wire your own GA-evolved parameters into it separately.
+Pure rendering / game-loop layer: menu, human-vs-bot, bot-vs-bot. Bot behavior
+is routed through parameterized controllers, with no evolutionary training
+attached yet.
 """
+import os
 import sys
+from pathlib import Path
+
+if __name__ == "__main__" and __package__ is None:
+    project_root = Path(__file__).resolve().parent.parent
+    os.chdir(project_root)
+    os.execv(
+        sys.executable,
+        [sys.executable, "-m", "game.main", *sys.argv[1:]],
+    )
 
 import pygame
 
-if __package__:
-    from .simulation import MatchSimulation
-    from .utils import (
-        BOT_BASE_SPEED,
-        COLORS,
-        COURT_H,
-        COURT_W,
-        COURT_X,
-        COURT_Y,
-        FPS,
-        SCREEN_H,
-        SCREEN_W,
-        draw_text,
-    )
-else:
-    from simulation import MatchSimulation
-    from utils import (
-        BOT_BASE_SPEED,
-        COLORS,
-        COURT_H,
-        COURT_W,
-        COURT_X,
-        COURT_Y,
-        FPS,
-        SCREEN_H,
-        SCREEN_W,
-        draw_text,
-    )
+from .controllers import BaselineController, HumanController
+from .simulation import MatchSimulation
+from .utils import (
+    COLORS,
+    COURT_H,
+    COURT_W,
+    COURT_X,
+    COURT_Y,
+    FPS,
+    SCREEN_H,
+    SCREEN_W,
+    draw_text,
+)
 
 MENU, HUMAN, BOTVBOT = "menu", "human", "botvbot"
 
@@ -49,6 +44,8 @@ class Game:
 
         self.state = MENU
         self.menu_buttons = []
+        self.left_controller = None
+        self.right_controller = None
         self._reset_court()
 
     def _reset_court(self):
@@ -80,6 +77,13 @@ class Game:
     def start(self, state):
         self.state = state
         self._reset_court()
+        if state == HUMAN:
+            self.left_controller = HumanController()
+        else:
+            self.left_controller = BaselineController()
+        self.right_controller = BaselineController()
+        self.left_controller.reset()
+        self.right_controller.reset()
 
     # ---- input -----------------------------------------------------------
     def handle_event(self, event):
@@ -98,22 +102,10 @@ class Game:
         if self.state not in (HUMAN, BOTVBOT):
             return
 
-        speed_cap = BOT_BASE_SPEED
-
-        if self.state == BOTVBOT:
-            self.p1.track(self.ball.y, speed_cap, dt)
-        else:
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                self.p1.move_by(-self.p1.speed * dt, COURT_Y, COURT_Y + COURT_H)
-            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                self.p1.move_by(self.p1.speed * dt, COURT_Y, COURT_Y + COURT_H)
-            mx, my = pygame.mouse.get_pos()
-            if pygame.Rect(COURT_X, COURT_Y, COURT_W, COURT_H).collidepoint(mx, my):
-                self.p1.y = my
+        self.left_controller.update(self.p1, self.ball, dt)
         self.p1.clamp(COURT_Y, COURT_Y + COURT_H)
 
-        self.p2.track(self.ball.y, speed_cap, dt)
+        self.right_controller.update(self.p2, self.ball, dt)
         self.p2.clamp(COURT_Y, COURT_Y + COURT_H)
 
         self.simulation.step(dt)

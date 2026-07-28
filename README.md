@@ -6,8 +6,9 @@ This repository currently contains a visual Pygame prototype with Human vs
 Bot and Bot vs Bot modes. Match state and physics are separated into
 `game/simulation.py`, which can run without creating a window.
 
-The current `Paddle.track()` method is a temporary fixed-speed controller.
-The genetic algorithm is not connected yet.
+Bot behavior is parameterized by paddle speed, reaction time, and movement
+threshold. The UI currently uses a baseline genome matching the original bot
+behavior. A random population and the genetic algorithm are not connected yet.
 
 ## Requirements
 
@@ -50,8 +51,8 @@ python game/main.py
 
 ```text
 ai-ping-pong/
-├── game/       # Pygame frontend, match simulation, entities, and constants
-├── ga/         # Placeholder for the future genetic algorithm
+├── game/       # Pygame frontend, controllers, simulation, and entities
+├── ga/         # Parameterized bot genome; evolutionary algorithm pending
 ├── logs/       # Future training logs
 ├── models/     # Future saved bot parameters
 ├── tests/      # Test package
@@ -61,8 +62,8 @@ ai-ping-pong/
 
 ## Planned genetic algorithm integration
 
-A future step will replace the temporary `Paddle.track()` controller with
-behavior driven by evolved bot parameters. Selection, crossover, mutation,
-fitness evaluation, headless training, training logs, and model persistence
-are not implemented at the current stage. The window-independent match
-simulation is only an architectural foundation for that future work.
+A future step will create and evolve populations of `BotGenome` instances.
+Selection, crossover, mutation, fitness evaluation, headless training,
+training logs, and model persistence are not implemented at the current
+stage. The window-independent match simulation and parameterized controllers
+are only an architectural foundation for that future work.
