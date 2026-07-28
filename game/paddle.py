@@ -1,6 +1,9 @@
 import pygame
 
-from utils import PADDLE_W, PADDLE_H
+if __package__:
+    from .utils import PADDLE_W, PADDLE_H
+else:
+    from utils import PADDLE_W, PADDLE_H
 
 
 class Paddle:

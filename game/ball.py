@@ -2,7 +2,10 @@ import random
 
 import pygame
 
-from utils import BALL_SIZE, COLORS
+if __package__:
+    from .utils import BALL_SIZE, COLORS
+else:
+    from utils import BALL_SIZE, COLORS
 
 
 class Ball:

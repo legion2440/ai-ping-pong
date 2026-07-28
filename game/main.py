@@ -8,23 +8,42 @@ import sys
 
 import pygame
 
-from ball import Ball
-from paddle import Paddle
-from utils import (
-    BALL_SIZE,
-    BOT_BASE_SPEED,
-    COLORS,
-    COURT_H,
-    COURT_W,
-    COURT_X,
-    COURT_Y,
-    FPS,
-    HUMAN_SPEED,
-    PADDLE_MARGIN,
-    SCREEN_H,
-    SCREEN_W,
-    draw_text,
-)
+if __package__:
+    from .ball import Ball
+    from .paddle import Paddle
+    from .utils import (
+        BALL_SIZE,
+        BOT_BASE_SPEED,
+        COLORS,
+        COURT_H,
+        COURT_W,
+        COURT_X,
+        COURT_Y,
+        FPS,
+        HUMAN_SPEED,
+        PADDLE_MARGIN,
+        SCREEN_H,
+        SCREEN_W,
+        draw_text,
+    )
+else:
+    from ball import Ball
+    from paddle import Paddle
+    from utils import (
+        BALL_SIZE,
+        BOT_BASE_SPEED,
+        COLORS,
+        COURT_H,
+        COURT_W,
+        COURT_X,
+        COURT_Y,
+        FPS,
+        HUMAN_SPEED,
+        PADDLE_MARGIN,
+        SCREEN_H,
+        SCREEN_W,
+        draw_text,
+    )
 
 MENU, HUMAN, BOTVBOT = "menu", "human", "botvbot"
 
