@@ -14,7 +14,7 @@ from ga.artifacts import GenerationRecord
 from ga.genome import BotGenome
 from game.controllers import BotController, HumanController
 from game.main import BOTVBOT, HUMAN, MENU, Game, main
-from game.utils import SCREEN_H, SCREEN_W
+from game.utils import COLORS, SCREEN_H, SCREEN_W
 
 BASELINE_GENOME = BotGenome(260.0, 0.0, 8.0)
 GENERATION_ONE_GENOME = BotGenome(300.0, 0.1, 12.0)
@@ -355,8 +355,28 @@ class FrontendRenderingTests(unittest.TestCase):
     def _drawn_texts(self, draw_text_mock):
         return [draw_call.args[1] for draw_call in draw_text_mock.call_args_list]
 
+    def test_window_caption_omits_visual_frontend_suffix(self):
+        surface = pygame.Surface((SCREEN_W, SCREEN_H))
+        with patch("game.main.pygame.init"), patch(
+            "game.main.pygame.display.set_caption"
+        ) as set_caption, patch(
+            "game.main.pygame.display.set_mode",
+            return_value=surface,
+        ), patch(
+            "game.main.pygame.time.Clock",
+            return_value=MagicMock(),
+        ):
+            Game(BEST_GENOME, GENERATION_RECORDS)
+
+        set_caption.assert_called_once_with("PONG // EVOLVE")
+
     def test_menu_text_changes_without_button_geometry_changes(self):
-        with patch("game.main.draw_text") as draw_text_mock:
+        measurement_font = MagicMock()
+        measurement_font.size.side_effect = lambda text: (len(text) * 7, 14)
+        with patch("game.main.draw_text") as draw_text_mock, patch(
+            "game.main.font",
+            return_value=measurement_font,
+        ):
             self.game.draw_menu()
 
         self.assertEqual(
@@ -367,11 +387,28 @@ class FrontendRenderingTests(unittest.TestCase):
             ],
         )
         texts = self._drawn_texts(draw_text_mock)
-        self.assertIn("Play against the saved best bot.", texts)
-        self.assertIn(
-            "Compare generation champions with generation 0.",
+        self.assertIn("Pick a mode to watch the bot play.", texts)
+        self.assertNotIn(
+            "Visual frontend - pick a mode to watch the bot play.",
             texts,
         )
+        self.assertIn("Play against the saved best bot.", texts)
+        self.assertIn("Compare generation champions with", texts)
+        self.assertIn("generation 0.", texts)
+        esc_call = next(
+            draw_call
+            for draw_call in draw_text_mock.call_args_list
+            if draw_call.args[1] == "ESC"
+        )
+        footer_call = next(
+            draw_call
+            for draw_call in draw_text_mock.call_args_list
+            if draw_call.args[1] == " returns to this menu during a match"
+        )
+        self.assertEqual(esc_call.args[4], COLORS["cyan"])
+        self.assertTrue(esc_call.kwargs["bold"])
+        self.assertEqual(footer_call.args[4], COLORS["muted"])
+        self.assertFalse(footer_call.kwargs.get("bold", False))
 
     def test_human_hud_labels_saved_best_bot(self):
         self.game.start(HUMAN)
@@ -384,7 +421,7 @@ class FrontendRenderingTests(unittest.TestCase):
         self.assertIn("BEST BOT", texts)
         self.assertIn("HUMAN VS BOT", texts)
 
-    def test_bot_hud_uses_generation_number_position_and_fitness(self):
+    def test_bot_hud_uses_current_and_last_generation_numbers(self):
         self.game.start(BOTVBOT)
         self.game.change_generation(1)
 
@@ -394,7 +431,10 @@ class FrontendRenderingTests(unittest.TestCase):
         texts = self._drawn_texts(draw_text_mock)
         self.assertIn("GEN 1", texts)
         self.assertIn("GEN 0", texts)
-        self.assertIn("BOT VS BOT · 2/2 · FITNESS 20.0", texts)
+        self.assertIn(
+            "BOT VS BOT (GEN 1 / GEN 1) · TRAIN FITNESS 20.0",
+            texts,
+        )
 
     def test_footer_depends_only_on_match_mode(self):
         for state, expected in (

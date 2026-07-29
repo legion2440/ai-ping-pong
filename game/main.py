@@ -44,6 +44,7 @@ from .utils import (
     SCREEN_H,
     SCREEN_W,
     draw_text,
+    font,
 )
 
 MENU, HUMAN, BOTVBOT = "menu", "human", "botvbot"
@@ -75,7 +76,7 @@ class Game:
         self.generation_index = 0
 
         pygame.init()
-        pygame.display.set_caption("PONG // EVOLVE - visual frontend")
+        pygame.display.set_caption("PONG // EVOLVE")
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock = pygame.time.Clock()
 
@@ -191,25 +192,62 @@ class Game:
         self.draw_grid(s)
         draw_text(s, "GENETIC ALGORITHM · PING-PONG SIMULATION", (SCREEN_W // 2, 90), 14, COLORS["cyan"], center=True)
         draw_text(s, "PONG // EVOLVE", (SCREEN_W // 2, 140), 46, COLORS["text"], bold=True, center=True)
-        draw_text(s, "Visual frontend - pick a mode to watch the bot play.", (SCREEN_W // 2, 185), 16, COLORS["muted"], center=True)
+        draw_text(s, "Pick a mode to watch the bot play.", (SCREEN_W // 2, 185), 16, COLORS["muted"], center=True)
 
         self.menu_buttons = []
         labels = [
-            ("HUMAN VS BOT", "Play against the saved best bot.", HUMAN, COLORS["cyan"]),
-            ("BOT VS BOT", "Compare generation champions with generation 0.", BOTVBOT, COLORS["lime"]),
+            (
+                "HUMAN VS BOT",
+                ("Play against the saved best bot.",),
+                HUMAN,
+                COLORS["cyan"],
+            ),
+            (
+                "BOT VS BOT",
+                ("Compare generation champions with", "generation 0."),
+                BOTVBOT,
+                COLORS["lime"],
+            ),
         ]
         btn_w, btn_h, gap = 320, 130, 24
         start_x = (SCREEN_W - (btn_w * 2 + gap)) // 2
         y = 250
-        for i, (title, desc, target, color) in enumerate(labels):
+        for i, (title, description_lines, target, color) in enumerate(labels):
             rect = pygame.Rect(start_x + i * (btn_w + gap), y, btn_w, btn_h)
             pygame.draw.rect(s, COLORS["panel"], rect, border_radius=4)
             pygame.draw.rect(s, color, rect, width=1, border_radius=4)
             draw_text(s, title, (rect.x + 20, rect.y + 20), 18, COLORS["text"], bold=True)
-            draw_text(s, desc, (rect.x + 20, rect.y + 52), 13, COLORS["muted"])
+            for line_index, line in enumerate(description_lines):
+                draw_text(
+                    s,
+                    line,
+                    (rect.x + 20, rect.y + 52 + line_index * 20),
+                    13,
+                    COLORS["muted"],
+                )
             self.menu_buttons.append((rect, target))
 
-        draw_text(s, "ESC returns to this menu during a match", (SCREEN_W // 2, y + btn_h + 40), 12, COLORS["muted"], center=True)
+        esc_label = "ESC"
+        footer_label = " returns to this menu during a match"
+        esc_width, esc_height = font(12, bold=True).size(esc_label)
+        footer_width, footer_height = font(12).size(footer_label)
+        footer_x = (SCREEN_W - esc_width - footer_width) // 2
+        footer_center_y = y + btn_h + 40
+        draw_text(
+            s,
+            esc_label,
+            (footer_x, footer_center_y - esc_height // 2),
+            12,
+            COLORS["cyan"],
+            bold=True,
+        )
+        draw_text(
+            s,
+            footer_label,
+            (footer_x + esc_width, footer_center_y - footer_height // 2),
+            12,
+            COLORS["muted"],
+        )
 
     def draw_hud(self):
         s = self.screen
@@ -220,12 +258,13 @@ class Game:
         else:
             current = self.generation_records[self.generation_index]
             initial = self.generation_records[0]
+            last = self.generation_records[-1]
             p1_label = f"GEN {current.generation}"
             p2_label = f"GEN {initial.generation}"
             mode_label = (
-                f"BOT VS BOT · {self.generation_index + 1}/"
-                f"{len(self.generation_records)} · "
-                f"FITNESS {current.best_fitness}"
+                f"BOT VS BOT (GEN {current.generation} / "
+                f"GEN {last.generation}) · "
+                f"TRAIN FITNESS {current.best_fitness}"
             )
 
         draw_text(s, p1_label, (COURT_X + 40, 45), 12, COLORS["muted"])

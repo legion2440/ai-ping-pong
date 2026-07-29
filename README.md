@@ -1,37 +1,46 @@
 # AI Ping Pong
 
-## Current status
+A deterministic ping-pong simulation in Python and Pygame where bots evolve through a genetic algorithm.
 
-This repository contains a visual Pygame frontend with Human vs Bot and Bot vs
-Bot modes. Match state and physics are separated into `game/simulation.py`,
-which can run without creating a window. Training is performed headlessly and
-separately from the GUI.
+The project includes Human vs Bot and Bot vs Bot modes, headless training and match evaluation, reproducible generation history, a saved best bot, deterministic evidence, and generation-by-generation visual replay.
 
-Bot behavior is parameterized by paddle speed, reaction time, and movement
-threshold. The frontend loads the canonical trained model and its 24-generation
-history: Human vs Bot uses the saved global best, while Bot vs Bot replays
-generation champions against generation `0`. The `260,0,8` baseline is the
-fixed training and evaluation opponent; it is not the bot loaded by the GUI.
+· [Русская версия](README_RU.md)
 
-## Requirements
+## 📋 TOC
 
-- Python 3.13 or another version compatible with Pygame 2.6.1
-- Pygame 2.6.1
+- [🚀 Quick start](#-quick-start)
+- [📝 About](#-about)
+- [✨ Features](#-features)
+- [🏗️ Architecture](#️-architecture)
+- [🧬 Bot genome](#-bot-genome)
+- [🧠 Genetic algorithm](#-genetic-algorithm)
+- [📊 Fitness and evaluation](#-fitness-and-evaluation)
+- [🕹️ Game modes and controls](#️-game-modes-and-controls)
+- [🧰 Technology stack](#-technology-stack)
+- [🧪 Tests](#-tests)
+- [📁 Project structure](#-project-structure)
+- [⚠️ Notes](#️-notes)
+- [🧑‍💻 Author](#-author)
 
-## Installation
+## 🚀 Quick start
 
-Create and activate a virtual environment, then install the pinned
-dependencies:
+### Prerequisites
+
+- Python `3.13` or another version compatible with Pygame `2.6.1`
+- a virtual environment is recommended
+
+### Clone and install
 
 ```powershell
+git clone https://01.tomorrow-school.ai/git/nyestaye/ai-ping-pong
+cd ai-ping-pong
+
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
 
-## Running the game
-
-The recommended command is:
+### Run the game
 
 ```powershell
 python -m game.main
@@ -43,56 +52,126 @@ Direct script execution is also supported:
 python game/main.py
 ```
 
-By default, the frontend loads:
+## 📝 About
 
-- `models/best_bot.json` for Human vs Bot
-- `logs/generations.csv` for Bot vs Bot generation replay
+AI Ping Pong is an educational project that demonstrates how a genetic algorithm can optimize bot behavior in a simple deterministic game environment.
 
-Human vs Bot uses the saved global best genome. Bot vs Bot compares the
-selected generation champion on the left with generation `0` on the right.
-Use the left and right arrow keys to change the selected generation. This is a
-visual replay, not formal evidence that a later generation outperforms an
-earlier one.
+The visual frontend is separated from the match simulation. The same simulation can therefore run:
 
-Custom artifacts can be supplied explicitly:
+- interactively through Pygame;
+- headlessly during training;
+- headlessly during deterministic evaluation;
+- without opening a display during automated tests.
 
-```powershell
-python -m game.main `
-    --model-path models/best_bot.json `
-    --generations-path logs/generations.csv
+Training is performed separately from the GUI. The frontend loads committed artifacts:
+
+```text
+models/best_bot.json
+logs/generations.csv
 ```
 
-Canonical defaults are resolved from the repository root. Explicit relative
-paths are resolved from the directory where the command was invoked, while
-absolute paths are used unchanged. Missing, malformed, or mutually
-inconsistent artifacts produce an explicit CLI error before Pygame opens a
-window; there is no baseline fallback.
+Human vs Bot uses the saved global best genome. Bot vs Bot replays each generation champion against generation `0`.
 
-## Headless match evaluation
+## ✨ Features
 
-Run a deterministic bot-vs-bot match without creating a window:
+### Gameplay
 
-```powershell
-python -m game.match_runner --seed 20260728 --left 260,0,8 --right 300,0.1,12
+- Human vs Bot mode;
+- Bot vs Bot mode;
+- mouse and keyboard control for the human paddle;
+- generation switching with left and right arrow keys;
+- score tracking and paddle/ball collision handling;
+- adaptive physics substeps that prevent fast balls from tunneling through paddles;
+- deterministic headless matches.
+
+### Bot evolution
+
+- random initial population;
+- parameterized bot genome;
+- tournament selection;
+- per-gene blend crossover;
+- per-gene Gaussian mutation;
+- direct elitism;
+- configurable population, generation count, mutation, crossover, seeds, and match limits;
+- deterministic evolution through an isolated random generator;
+- saved best bot in JSON;
+- canonical generation history in CSV.
+
+### Evidence and reproducibility
+
+- best, mean, and worst fitness for every generation;
+- held-out deterministic evaluation;
+- final champion compared directly with generation `0`;
+- committed JSON evaluation report;
+- deterministic SVG fitness chart;
+- reproducible frontend screenshots;
+- canonical training and evaluation seeds documented below.
+
+## 🏗️ Architecture
+
+```text
+                    +----------------------+
+                    |   Pygame frontend    |
+                    |     game/main.py     |
+                    +----------+-----------+
+                               |
+                               v
+                    +----------------------+
+                    |  MatchSimulation     |
+                    | game/simulation.py   |
+                    +----------+-----------+
+                               |
+              +----------------+----------------+
+              |                                 |
+              v                                 v
+    +-------------------+             +-------------------+
+    | HumanController   |             | BotController     |
+    | keyboard / mouse  |             | genome-driven     |
+    +-------------------+             +-------------------+
+
+    +-----------------------------------------------------+
+    | Headless training and evaluation                    |
+    | ga/genetic_algorithm.py -> ga/fitness.py            |
+    |                           -> game/match_runner.py    |
+    +-----------------------------------------------------+
 ```
 
-Direct script execution is also supported:
+The core game state is independent from the display. Training and evaluation use the same simulation and controller behavior as the visual frontend.
 
-```powershell
-python game/match_runner.py --seed 20260728
+## 🧬 Bot genome
+
+Each bot is represented by three parameters:
+
+| Parameter | Meaning |
+|---|---|
+| `paddle_speed` | maximum paddle movement speed in pixels per second |
+| `reaction_time` | delay between target updates |
+| `movement_threshold` | dead zone around the target position |
+
+Canonical promoted genome:
+
+```text
+paddle_speed       = 420.0
+reaction_time      = 0.039498692275418835
+movement_threshold = 29.790193846648812
 ```
 
-The command prints one JSON object containing the score, returns by each bot,
-longest rally, winner, simulated duration, and termination reason. The seed
-makes repeated evaluations with the same genomes and configuration
-reproducible.
+The controller updates its target from the ball position according to `reaction_time`, then moves toward that target using `paddle_speed` and `movement_threshold`.
 
-## Genetic algorithm training
+## 🧠 Genetic algorithm
 
 Run deterministic headless training:
 
 ```powershell
-python -m ga.genetic_algorithm --population-size 8 --generations 3
+python -m ga.genetic_algorithm
+```
+
+Example with a smaller custom run:
+
+```powershell
+python -m ga.genetic_algorithm `
+    --population-size 8 `
+    --generations 3
 ```
 
 Direct script execution is also supported:
@@ -101,20 +180,7 @@ Direct script execution is also supported:
 python ga/genetic_algorithm.py --population-size 8 --generations 3
 ```
 
-Each candidate plays the fixed baseline twice for every match seed: first as
-the left bot and then as the right bot. Fitness is maximized and calculated
-for each match as:
-
-```text
-score_weight * (candidate_score - opponent_score)
-    + return_weight * candidate_returns
-```
-
-The final fitness is the mean across all `2 * len(match_seeds)` matches.
-Negative fitness is valid. The evolutionary cycle uses tournament selection,
-per-gene blend crossover, per-gene Gaussian mutation, and direct elitism.
-
-Default training parameters:
+### Default CLI parameters
 
 - Evolution seed: `20260728`
 - Population size: `16`
@@ -123,7 +189,7 @@ Default training parameters:
 - Tournament size: `3`
 - Crossover rate: `0.8`
 - Mutation rate: `0.2`
-- Mutation sigma: `0.10` of each gene's full range
+- Mutation sigma: `0.10`
 - Match seeds: `20260728,20260729`
 - Match limit: `1800` steps or `3` points
 - Baseline opponent: `260,0,8`
@@ -132,9 +198,7 @@ Default training parameters:
 
 ### Canonical training run
 
-The committed model and generation history were produced by a larger
-deterministic run. These parameters describe the canonical artifacts, not the
-CLI defaults above:
+The committed model and history were produced with:
 
 - Evolution seed: `20260730`
 - Population size: `32`
@@ -143,103 +207,103 @@ CLI defaults above:
 - Tournament size: `4`
 - Crossover rate: `0.8`
 - Mutation rate: `0.2`
-- Mutation sigma: `0.1` of each gene's full range
+- Mutation sigma: `0.1`
 - Training seeds: `2000,2001,2002,2003,2004,2005,2006,2007`
 - Match limit: `3600` steps or `5` points
 - Baseline opponent: `260,0,8`
 - Score weight: `100.0`
 - Return weight: `1.0`
 
-Promoted best genome:
-
-- Paddle speed: `420.0`
-- Reaction time: `0.039498692275418835`
-- Movement threshold: `29.790193846648812`
-- Training fitness: `218.375`
-
-The evolution seed controls initial genomes, selection, crossover, and
-mutation. Match seeds independently control match physics. Reusing all
-arguments produces the same result without changing Python's global random
-state. The command prints one JSON object to stdout containing the best genome
-and the in-memory best/mean/worst fitness history for every evaluated
-generation.
-
-### Training output and artifacts
-
-During training, one progress line per generation is written to stderr. The
-final machine-readable result remains one JSON line in stdout. A successful
-run writes these files by default:
-
-- `logs/generations.csv`
-- `models/best_bot.json`
-
-Relative artifact paths are resolved from the directory where training was
-invoked. Override them with `--log-path` and `--model-path`.
-
-The CSV contains one row per generation with these columns:
+The training command writes:
 
 ```text
-generation,best_fitness,mean_fitness,worst_fitness,paddle_speed,reaction_time,movement_threshold
+logs/generations.csv
+models/best_bot.json
 ```
 
-The JSON model uses schema version `1` and contains the global best fitness,
-the best genome, the complete evolution config, and the complete fitness
-config. Saving this reusable model is an implemented bonus, and the frontend
-loads it for Human vs Bot.
-
-Suppress progress while still saving artifacts:
+Use custom paths with:
 
 ```powershell
-python -m ga.genetic_algorithm --quiet
+python -m ga.genetic_algorithm `
+    --log-path custom/generations.csv `
+    --model-path custom/best_bot.json
 ```
 
-Run without creating either artifact:
+## 📊 Fitness and evaluation
 
-```powershell
-python -m ga.genetic_algorithm --no-artifacts --quiet
+For one match, candidate fitness is calculated as:
+
+```text
+score_weight * (candidate_score - opponent_score)
+    + return_weight * candidate_returns
 ```
 
-Load and validate a saved genome programmatically:
+Each candidate plays on both sides for every configured seed. Final fitness is the arithmetic mean across all matches.
 
-```python
-from ga.artifacts import load_best_genome
+The canonical CSV stores:
 
-genome = load_best_genome("models/best_bot.json")
+```text
+generation
+best_fitness
+mean_fitness
+worst_fitness
+paddle_speed
+reaction_time
+movement_threshold
 ```
 
-## Deterministic evaluation
+### Canonical result
 
-Reproduce the canonical locked evaluation and its fitness chart:
+| Metric | Generation 0 | Generation 23 | Result |
+|---|---:|---:|---:|
+| Training mean fitness | -144.814453125 | 198.83984375 | +343.654296875 |
+| Held-out fitness | 155.05 | 182.225 | +27.175 |
+| Final vs initial | — | 13 W / 27 D / 0 L | 13:0 points |
+
+Run the locked deterministic evaluation:
 
 ```powershell
 python -m ga.evaluation
 ```
 
-The locked seeds `1000..1019` were not used during training. Every evaluated
-genome plays once on the left and once on the right for each seed. Training
-mean fitness is read directly from the canonical CSV; held-out fitness comes
-from real matches against the fixed baseline. The final champion is also
-evaluated directly against generation `0`.
+The evaluation uses held-out seeds `1000..1019`, which were not used during training. Every genome plays once on the left and once on the right for each seed.
 
-A GUI replay is useful for inspection, but is not formal evidence of
-improvement. The deterministic numerical report provides that evidence:
+Artifacts:
 
-| Metric | Generation 0 | Generation 23 | Result |
-| --- | ---: | ---: | ---: |
-| Training mean fitness | -144.814453125 | 198.83984375 | +343.654296875 |
-| Held-out fitness | 155.05 | 182.225 | +27.175 |
-| Final vs initial | — | 13 W / 27 D / 0 L | 13:0 points |
-
-[Full deterministic evaluation report](reports/evaluation.json)
+- [Full deterministic evaluation report](reports/evaluation.json)
+- [Fitness progress chart](docs/fitness_progress.svg)
 
 ![Training and held-out fitness by generation](docs/fitness_progress.svg)
 
-The chart shows training best, training mean, and held-out champion fitness
-for every generation. The saved history contains generation champions rather
-than complete historical populations, so held-out evaluation is available
-for those champions.
+A visual replay is useful for inspection, but the numerical evaluation report is the formal evidence of improvement.
 
-## Frontend screenshots
+## 🕹️ Game modes and controls
+
+### Human vs Bot
+
+The human player controls the left paddle. The right paddle uses the saved global best genome from:
+
+```text
+models/best_bot.json
+```
+
+Controls:
+
+- mouse inside the court;
+- `W` / `S`;
+- up / down arrow keys;
+- `Esc` returns to the menu.
+
+### Bot vs Bot
+
+The selected generation champion plays on the left against generation `0` on the right.
+
+Controls:
+
+- left / right arrow keys change the selected generation;
+- `Esc` returns to the menu.
+
+Screenshots:
 
 ![Main menu](docs/screenshots/menu.png)
 
@@ -247,42 +311,105 @@ for those champions.
 
 ![Final generation replay](docs/screenshots/generation-final.png)
 
-In the final replay, generation `23` plays against generation `0`. The
-screenshots can be regenerated with:
+Regenerate them with:
 
 ```powershell
 python -m tools.capture_screenshots
 ```
 
-## Controls
+## 🧰 Technology stack
 
-- Move the human paddle with the mouse while the pointer is over the court.
-- Use `W`/`S` or the up/down arrow keys to move the human paddle.
-- In Bot vs Bot, use the left/right arrow keys to change generation.
-- Press `Esc` during a match to return to the menu.
-- Close the window to exit.
+| Layer | Technology |
+|---|---|
+| Language | Python |
+| Visual frontend | Pygame `2.6.1` |
+| Simulation | custom deterministic 2D physics |
+| Evolution | custom genetic algorithm |
+| Artifacts | JSON, CSV, SVG, PNG |
+| Tests | Python `unittest` |
 
-## Repository structure
+No external dataset is used. Training data is generated by deterministic simulated matches.
+
+## 🧪 Tests
+
+Run all tests:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+Additional checks:
+
+```powershell
+python -m compileall game ga tools tests
+python -m pip check
+```
+
+The test suite covers:
+
+- simulation and collision behavior;
+- large-step and sub-30px tunneling regressions;
+- bot and human controllers;
+- deterministic match execution;
+- genome validation;
+- selection, crossover, and mutation;
+- fitness aggregation;
+- genetic algorithm evolution;
+- CSV and JSON artifacts;
+- CLI path and error behavior;
+- deterministic evaluation;
+- SVG generation;
+- screenshot capture;
+- frontend integration;
+- edge cases and reproducibility.
+
+## 📁 Project structure
 
 ```text
 ai-ping-pong/
-├── docs/       # Fitness chart and frontend screenshots
-├── game/       # Pygame frontend, controllers, simulation, and entities
-├── ga/         # GA, training, evaluation, and artifact serialization
-├── logs/       # Canonical per-generation fitness history
-├── models/     # Canonical saved best genome
-├── reports/    # Deterministic locked evaluation
-├── tests/      # Test package
-├── tools/      # Screenshot capture utility
+├── docs/
+│   ├── fitness_progress.svg
+│   └── screenshots/
+├── game/
+│   ├── ball.py
+│   ├── controllers.py
+│   ├── main.py
+│   ├── match_runner.py
+│   ├── paddle.py
+│   ├── simulation.py
+│   └── utils.py
+├── ga/
+│   ├── artifacts.py
+│   ├── crossover.py
+│   ├── evaluation.py
+│   ├── fitness.py
+│   ├── genetic_algorithm.py
+│   ├── genome.py
+│   ├── mutation.py
+│   └── selection.py
+├── logs/
+│   └── generations.csv
+├── models/
+│   └── best_bot.json
+├── reports/
+│   └── evaluation.json
+├── tests/
+├── tools/
+│   └── capture_screenshots.py
 ├── requirements.txt
-└── README.md
+├── README.md
+└── README_RU.md
 ```
 
-## Planned integration
+## ⚠️ Notes
 
-The following items are intentionally not implemented yet:
+- Training is separate from the visual game and does not run in the background during gameplay.
+- Human vs Bot always loads the committed best bot unless another model path is supplied.
+- Bot vs Bot replays generation champions; it does not retrain them.
+- `FITNESS` in the HUD is the historical training fitness of the selected generation champion, not the current match score.
+- Generation numbering starts from `0`, so a 24-generation history contains generations `0..23`.
+- The baseline genome `260,0,8` is used for training and evaluation; it is not the default Human vs Bot opponent.
+- The committed JSON model is the implemented best-bot persistence bonus.
 
-- Training inside the GUI
-- API control
-- Gradual difficulty adjustment
-- GIF recording
+## 🧑‍💻 Author
+Nazar Yestayev (@nyestaye)
