@@ -30,7 +30,7 @@ class GenerationRecord:
     genome: BotGenome
 
 
-def _atomic_write_text(path, content):
+def atomic_write_text(path, content):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = None
@@ -79,7 +79,7 @@ def write_generations_csv(result, path):
             )
         )
 
-    _atomic_write_text(path, output.getvalue())
+    atomic_write_text(path, output.getvalue())
 
 
 def load_generation_history(path) -> tuple[GenerationRecord, ...]:
@@ -176,7 +176,7 @@ def write_best_genome_json(result, path):
         "fitness_config": result.fitness_config.to_dict(),
     }
     content = json.dumps(payload, sort_keys=True, indent=2) + "\n"
-    _atomic_write_text(path, content)
+    atomic_write_text(path, content)
 
 
 def load_best_genome(path):

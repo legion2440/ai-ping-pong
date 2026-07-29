@@ -7,6 +7,7 @@ from unittest.mock import patch
 from ga.artifacts import (
     CSV_HEADER,
     GenerationRecord,
+    atomic_write_text,
     load_best_genome,
     load_generation_history,
     write_best_genome_json,
@@ -430,6 +431,19 @@ class BestGenomeLoadingErrorsTests(unittest.TestCase):
 
 
 class AtomicWriteTests(unittest.TestCase):
+    def test_public_atomic_writer_creates_parents_and_exact_text(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "nested" / "report.txt"
+
+            atomic_write_text(path, "first\n")
+            atomic_write_text(path, "second\n")
+
+            self.assertEqual(path.read_bytes(), b"second\n")
+            self.assertEqual(
+                {item.name for item in path.parent.iterdir()},
+                {"report.txt"},
+            )
+
     def test_no_temporary_file_remains_after_success(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
