@@ -1,20 +1,20 @@
 {
   "evolution_config": {
     "crossover_rate": 0.8,
-    "elite_count": 2,
-    "generations": 8,
+    "elite_count": 4,
+    "generations": 24,
     "mutation_rate": 0.2,
     "mutation_sigma": 0.1,
-    "population_size": 16,
-    "seed": 20260728,
-    "tournament_size": 3
+    "population_size": 32,
+    "seed": 20260730,
+    "tournament_size": 4
   },
-  "fitness": 81.25,
+  "fitness": 218.375,
   "fitness_config": {
     "match_config": {
       "dt": 0.016666666666666666,
-      "max_steps": 1800,
-      "score_limit": 3
+      "max_steps": 3600,
+      "score_limit": 5
     },
     "opponent_genome": {
       "movement_threshold": 8.0,
@@ -24,14 +24,20 @@
     "return_weight": 1.0,
     "score_weight": 100.0,
     "seeds": [
-      20260728,
-      20260729
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007
     ]
   },
   "genome": {
-    "movement_threshold": 9.457155877690875,
-    "paddle_speed": 285.1405239321148,
-    "reaction_time": 0.09467365148934277
+    "movement_threshold": 29.790193846648812,
+    "paddle_speed": 420.0,
+    "reaction_time": 0.039498692275418835
   },
   "schema_version": 1
 }
