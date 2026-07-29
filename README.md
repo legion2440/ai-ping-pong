@@ -16,6 +16,7 @@ The project includes Human vs Bot and Bot vs Bot modes, headless training and ma
 - [🧠 Genetic algorithm](#-genetic-algorithm)
 - [📊 Fitness and evaluation](#-fitness-and-evaluation)
 - [🕹️ Game modes and controls](#️-game-modes-and-controls)
+- [🌐 Generation API](#-generation-api)
 - [🧰 Technology stack](#-technology-stack)
 - [🧪 Tests](#-tests)
 - [📁 Project structure](#-project-structure)
@@ -109,6 +110,12 @@ Human vs Bot uses the saved global best genome. Bot vs Bot can replay any two ge
 - reproducible frontend screenshots;
 - canonical training and evaluation seeds documented below.
 
+### Implemented bonuses
+
+- read-only generation and fitness API;
+- manual and automatic gradual difficulty;
+- best bot persistence in JSON.
+
 ## 🏗️ Architecture
 
 ```text
@@ -136,9 +143,14 @@ Human vs Bot uses the saved global best genome. Bot vs Bot can replay any two ge
     | ga/genetic_algorithm.py -> ga/fitness.py            |
     |                           -> game/match_runner.py    |
     +-----------------------------------------------------+
+
+    +-----------------------------------------------------+
+    | Read-only generation API                            |
+    | api/app.py -> ga/artifacts.py -> generations.csv    |
+    +-----------------------------------------------------+
 ```
 
-The core game state is independent from the display. Training and evaluation use the same simulation and controller behavior as the visual frontend. Runtime difficulty belongs only to the visual `Game` through `game/difficulty.py`; `MatchSimulation` remains unaware of UI controls and automatic timing.
+The core game state is independent from the display. Training and evaluation use the same simulation and controller behavior as the visual frontend. Runtime difficulty belongs only to the visual `Game` through `game/difficulty.py`; `MatchSimulation` remains unaware of UI controls and automatic timing. The API is also independent from Pygame and only reads the canonical generation history through the existing artifact loader.
 
 ## 🧬 Bot genome
 
@@ -325,6 +337,12 @@ AUTO is ON by default. Every 20 seconds of active match time it adds `0.10` to b
 
 Changing difficulty preserves the score, current rally, entity positions, and controllers. Paddle resizing preserves each center before clamping it to the court. A goal preserves difficulty, and the next serve uses the current speed multiplier. A real generation change or entering a new mode resets the match and difficulty; pressing a disabled generation boundary control changes nothing.
 
+Training fitness values were produced under the canonical default environment: ball speed `x1.00` and paddle height `90 px`, without runtime difficulty adjustments. `TRAIN FITNESS` ranks generation champions only under those training conditions.
+
+Manual or automatic difficulty changes create an out-of-training stress-test environment. Because genome parameters such as `movement_threshold` are absolute pixel values, changing ball speed or paddle height can change the relative performance of generations. An earlier generation may therefore beat a later generation under custom difficulty settings without contradicting the recorded training progress.
+
+For a like-for-like generation comparison, use ball speed `x1.00`, paddle height `90 px`, and set AUTO to OFF.
+
 Screenshots:
 
 ![Main menu](docs/screenshots/menu.png)
@@ -339,12 +357,56 @@ Regenerate them with:
 python -m tools.capture_screenshots
 ```
 
+## 🌐 Generation API
+
+The FastAPI service provides read-only access to the current generation and fitness history. It does not start the genetic algorithm, change the game, or write to `logs/generations.csv`. The selected CSV is loaded again for every data request, so a completed training run becomes visible without restarting the server.
+
+Start the local server:
+
+```powershell
+python -m api.main
+```
+
+Direct script execution is also supported:
+
+```powershell
+python api/main.py
+```
+
+Swagger UI is available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+| Method | Endpoint | Response |
+|---|---|---|
+| `GET` | `/` | API name, read-only status, source, and docs URL |
+| `GET` | `/health` | service health without reading the CSV |
+| `GET` | `/generations` | all generation records including genomes |
+| `GET` | `/generations/{generation}` | one generation record |
+| `GET` | `/fitness` | fitness history without genomes |
+
+Example requests:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/generations
+Invoke-RestMethod http://127.0.0.1:8000/generations/23
+Invoke-RestMethod http://127.0.0.1:8000/fitness
+```
+
+Use another generation log:
+
+```powershell
+python -m api.main `
+    --generations-path custom/generations.csv
+```
+
+Without this option the API uses the canonical project-root `logs/generations.csv`. An explicitly supplied relative path is resolved from the invocation working directory; an absolute path is used unchanged. The default host is `127.0.0.1` and the default port is `8000`.
+
 ## 🧰 Technology stack
 
 | Layer | Technology |
 |---|---|
 | Language | Python |
 | Visual frontend | Pygame `2.6.1` |
+| Read-only API | FastAPI `0.139.2`, Uvicorn `0.51.0` |
 | Simulation | custom deterministic 2D physics |
 | Evolution | custom genetic algorithm |
 | Artifacts | JSON, CSV, SVG, PNG |
@@ -363,7 +425,7 @@ python -m unittest discover -s tests -v
 Additional checks:
 
 ```powershell
-python -m compileall game ga tools tests
+python -m compileall api game ga tools tests
 python -m pip check
 ```
 
@@ -384,12 +446,16 @@ The test suite covers:
 - screenshot capture;
 - frontend integration;
 - runtime difficulty and independent generation controls;
+- read-only API endpoints, reload behavior, errors, paths, and CLI;
 - edge cases and reproducibility.
 
 ## 📁 Project structure
 
 ```text
 ai-ping-pong/
+├── api/
+│   ├── app.py
+│   └── main.py
 ├── docs/
 │   ├── fitness_progress.svg
 │   └── screenshots/
@@ -435,6 +501,7 @@ ai-ping-pong/
 - Manual and automatic gradual difficulty are implemented visual-game bonuses and do not alter canonical training or evaluation.
 - The baseline genome `260,0,8` is used for training and evaluation; it is not the default Human vs Bot opponent.
 - The committed JSON model is the implemented best-bot persistence bonus.
+- The generation/fitness API is an implemented read-only bonus and never writes training artifacts.
 
 ## 🧑‍💻 Author
 Nazar Yestayev (@nyestaye)
