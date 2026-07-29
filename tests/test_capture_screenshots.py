@@ -50,7 +50,7 @@ def write_artifacts(root, final_genome=FINAL_GENOME):
 
 
 class ScreenshotCaptureTests(unittest.TestCase):
-    def test_real_game_creates_three_nonempty_900_by_620_png_files(self):
+    def test_real_game_creates_three_nonempty_900_by_690_png_files(self):
         random_state = random.getstate()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -75,6 +75,24 @@ class ScreenshotCaptureTests(unittest.TestCase):
                     self.assertEqual(image.get_size(), (SCREEN_W, SCREEN_H))
                     colors = pygame.transform.average_color(image)
                     self.assertNotEqual(colors[:3], (0, 0, 0))
+            first_capture = {
+                path.name: path.read_bytes()
+                for path in paths
+            }
+
+            with patch(
+                "tools.capture_screenshots.PROJECT_ROOT",
+                root,
+            ):
+                main()
+
+            self.assertEqual(
+                {
+                    path.name: path.read_bytes()
+                    for path in paths
+                },
+                first_capture,
+            )
 
         self.assertEqual(random.getstate(), random_state)
 
@@ -113,7 +131,7 @@ class ScreenshotCaptureTests(unittest.TestCase):
             [call(1 / 60)] * 360,
         )
         game.start.assert_called_once_with("botvbot")
-        game.change_generation.assert_called_once_with(2)
+        game.change_generation.assert_called_once_with("left", 2)
         self.assertEqual(
             [item.args[1].name for item in save.call_args_list],
             ["menu.png", "generation-0.png", "generation-final.png"],

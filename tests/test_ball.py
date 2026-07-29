@@ -56,5 +56,70 @@ class BallRandomnessTests(unittest.TestCase):
             self.assertEqual((ball.vx, ball.vy), (expected_vx, expected_vy))
 
 
+class BallRuntimeSpeedTests(unittest.TestCase):
+    def test_default_reset_preserves_legacy_types_and_rng_order(self):
+        ball_rng = random.Random(20260728)
+        expected_rng = random.Random(20260728)
+        expected_vx = 260 * expected_rng.choice([-1, 1])
+        expected_vy = expected_rng.uniform(-100, 100)
+        ball = Ball(0, 0, rng=ball_rng)
+
+        ball.reset(10, 20)
+
+        self.assertEqual(ball.vx, expected_vx)
+        self.assertIs(type(ball.vx), int)
+        self.assertEqual(ball.vy, expected_vy)
+        self.assertEqual(ball.speed_multiplier, 1.0)
+
+    def test_runtime_multiplier_scales_velocity_without_moving_ball(self):
+        ball = Ball(10, 20, vx=-260, vy=75)
+
+        self.assertTrue(ball.set_speed_multiplier(1.5))
+
+        self.assertEqual((ball.x, ball.y), (10, 20))
+        self.assertEqual((ball.vx, ball.vy), (-390.0, 112.5))
+        self.assertEqual(ball.speed_multiplier, 1.5)
+        self.assertFalse(ball.set_speed_multiplier(1.5))
+
+    def test_reset_uses_current_runtime_multiplier(self):
+        ball_rng = random.Random(20260728)
+        expected_rng = random.Random(20260728)
+        direction = expected_rng.choice([-1, 1])
+        vertical_speed = expected_rng.uniform(-100, 100)
+        ball = Ball(0, 0, rng=ball_rng, speed_multiplier=1.5)
+
+        ball.reset(10, 20)
+
+        self.assertEqual(ball.vx, 260 * direction * 1.5)
+        self.assertEqual(ball.vy, vertical_speed * 1.5)
+
+    def test_scaled_bounce_uses_scaled_caps_and_vertical_impulse(self):
+        ball = Ball(
+            10,
+            120,
+            vx=2000,
+            vy=1000,
+            speed_multiplier=2.0,
+        )
+
+        ball.bounce_off_paddle(100, -1)
+
+        self.assertEqual(ball.vx, -1360.0)
+        self.assertEqual(ball.vy, 840.0)
+
+    def test_invalid_runtime_multiplier_is_rejected(self):
+        for value, exception_type in (
+            (True, TypeError),
+            ("1.0", TypeError),
+            (0, ValueError),
+            (-1, ValueError),
+            (float("nan"), ValueError),
+            (float("inf"), ValueError),
+        ):
+            with self.subTest(value=value):
+                with self.assertRaises(exception_type):
+                    Ball(0, 0, speed_multiplier=value)
+
+
 if __name__ == "__main__":
     unittest.main()

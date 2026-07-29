@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pygame
 
@@ -14,7 +14,7 @@ from ga.artifacts import GenerationRecord
 from ga.genome import BotGenome
 from game.controllers import BotController, HumanController
 from game.main import BOTVBOT, HUMAN, MENU, Game, main
-from game.utils import COLORS, SCREEN_H, SCREEN_W
+from game.utils import COLORS, COURT_H, COURT_Y, SCREEN_H, SCREEN_W
 
 BASELINE_GENOME = BotGenome(260.0, 0.0, 8.0)
 GENERATION_ONE_GENOME = BotGenome(300.0, 0.1, 12.0)
@@ -127,7 +127,13 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
     def test_bot_vs_bot_starts_with_two_independent_generation_zero_bots(self):
         self.game.start(BOTVBOT)
 
-        self.assertEqual(self.game.generation_index, 0)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (0, 0),
+        )
         self.assertIsInstance(self.game.left_controller, BotController)
         self.assertIsInstance(self.game.right_controller, BotController)
         self.assertIsNot(
@@ -145,14 +151,20 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         self.assertIsNone(self.game.left_controller.target_y)
         self.assertIsNone(self.game.right_controller.target_y)
 
-    def test_right_and_left_switch_only_the_current_generation(self):
+    def test_left_and_right_generations_change_independently(self):
         self.game.start(BOTVBOT)
 
         self.game.handle_event(
-            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d)
         )
 
-        self.assertEqual(self.game.generation_index, 1)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (1, 0),
+        )
         self.assertIs(
             self.game.left_controller.genome,
             GENERATION_RECORDS[1].genome,
@@ -163,41 +175,82 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         )
 
         self.game.handle_event(
-            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT)
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
         )
 
-        self.assertEqual(self.game.generation_index, 0)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (1, 1),
+        )
         self.assertIs(
             self.game.left_controller.genome,
-            GENERATION_RECORDS[0].genome,
+            GENERATION_RECORDS[1].genome,
         )
         self.assertIs(
             self.game.right_controller.genome,
-            GENERATION_RECORDS[0].genome,
+            GENERATION_RECORDS[1].genome,
+        )
+
+        self.game.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)
+        )
+        self.game.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT)
+        )
+
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (0, 0),
         )
 
     def test_generation_boundaries_do_not_wrap_or_reset(self):
         self.game.start(BOTVBOT)
+        self.game.change_ball_speed(1)
+        self.game.difficulty.elapsed = 7.5
         initial_controllers = (
             self.game.left_controller,
             self.game.right_controller,
         )
         initial_ball = self.game.ball
         self.game.simulation.score1 = 3
-
-        self.game.handle_event(
-            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT)
+        initial_difficulty = (
+            self.game.difficulty.ball_speed_multiplier,
+            self.game.difficulty.paddle_height,
+            self.game.difficulty.auto_enabled,
+            self.game.difficulty.elapsed,
         )
 
-        self.assertEqual(self.game.generation_index, 0)
+        self.game.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)
+        )
+
+        self.assertEqual(self.game.left_generation_index, 0)
         self.assertEqual(self.game.score1, 3)
         self.assertIs(self.game.ball, initial_ball)
         self.assertEqual(
             (self.game.left_controller, self.game.right_controller),
             initial_controllers,
         )
+        self.assertEqual(
+            (
+                self.game.difficulty.ball_speed_multiplier,
+                self.game.difficulty.paddle_height,
+                self.game.difficulty.auto_enabled,
+                self.game.difficulty.elapsed,
+            ),
+            initial_difficulty,
+        )
 
-        self.game.change_generation(1)
+        self.game.change_generation("left", 1)
+        self.game.change_generation("right", 1)
+        self.game.change_paddle_size(-1)
+        self.game.difficulty.elapsed = 6.0
         last_controllers = (
             self.game.left_controller,
             self.game.right_controller,
@@ -206,16 +259,27 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         self.game.simulation.score2 = 4
 
         self.game.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d)
+        )
+        self.game.handle_event(
             pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
         )
 
-        self.assertEqual(self.game.generation_index, 1)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (1, 1),
+        )
         self.assertEqual(self.game.score2, 4)
         self.assertIs(self.game.ball, last_ball)
         self.assertEqual(
             (self.game.left_controller, self.game.right_controller),
             last_controllers,
         )
+        self.assertEqual(self.game.difficulty.paddle_height, 85)
+        self.assertEqual(self.game.difficulty.elapsed, 6.0)
 
     def test_actual_generation_change_resets_existing_simulation_and_controllers(self):
         self.game.start(BOTVBOT)
@@ -228,9 +292,20 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         simulation.score1 = 2
         simulation.score2 = 1
 
-        self.game.change_generation(1)
+        self.game.change_ball_speed(2)
+        self.game.change_paddle_size(-2)
+        self.game.set_auto_difficulty(False)
+        self.game.difficulty.elapsed = 9.0
+        self.game.change_generation("right", 1)
 
         self.assertIs(self.game.simulation, simulation)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (0, 1),
+        )
         self.assertEqual((self.game.score1, self.game.score2), (0, 0))
         self.assertTrue(
             all(
@@ -249,16 +324,56 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         )
         self.assertIsNone(self.game.left_controller.target_y)
         self.assertIsNone(self.game.right_controller.target_y)
+        self.assertEqual(
+            (
+                self.game.difficulty.ball_speed_multiplier,
+                self.game.difficulty.paddle_height,
+                self.game.difficulty.auto_enabled,
+                self.game.difficulty.elapsed,
+            ),
+            (1.0, 90, True, 0.0),
+        )
+        self.assertIs(
+            self.game.left_controller.genome,
+            GENERATION_RECORDS[0].genome,
+        )
+        self.assertIs(
+            self.game.right_controller.genome,
+            GENERATION_RECORDS[1].genome,
+        )
 
     def test_reentering_bot_vs_bot_starts_from_generation_zero(self):
         self.game.start(BOTVBOT)
-        self.game.change_generation(1)
-        self.assertEqual(self.game.generation_index, 1)
+        self.game.change_generation("left", 1)
+        self.game.change_generation("right", 1)
+        self.game.change_ball_speed(1)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (1, 1),
+        )
 
         self.game.state = MENU
         self.game.start(BOTVBOT)
 
-        self.assertEqual(self.game.generation_index, 0)
+        self.assertEqual(
+            (
+                self.game.left_generation_index,
+                self.game.right_generation_index,
+            ),
+            (0, 0),
+        )
+        self.assertEqual(
+            (
+                self.game.difficulty.ball_speed_multiplier,
+                self.game.difficulty.paddle_height,
+                self.game.difficulty.auto_enabled,
+                self.game.difficulty.elapsed,
+            ),
+            (1.0, 90, True, 0.0),
+        )
         self.assertIs(
             self.game.left_controller.genome,
             GENERATION_RECORDS[0].genome,
@@ -287,6 +402,345 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         self.assertEqual(
             (self.game.left_controller, self.game.right_controller),
             controllers,
+        )
+
+    def test_change_generation_rejects_invalid_side(self):
+        self.game.start(BOTVBOT)
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "side must be 'left' or 'right'",
+        ):
+            self.game.change_generation("center", 1)
+
+    def test_manual_speed_change_preserves_active_match(self):
+        self.game.start(HUMAN)
+        self.game.simulation.score1 = 3
+        self.game.simulation.score2 = 2
+        self.game.difficulty.elapsed = 7.5
+        entities = (self.game.p1, self.game.p2, self.game.ball)
+        controllers = (
+            self.game.left_controller,
+            self.game.right_controller,
+        )
+        positions = (
+            self.game.p1.y,
+            self.game.p2.y,
+            self.game.ball.x,
+            self.game.ball.y,
+        )
+        velocities = (self.game.ball.vx, self.game.ball.vy)
+
+        self.assertTrue(self.game.change_ball_speed(1))
+
+        self.assertEqual((self.game.score1, self.game.score2), (3, 2))
+        self.assertEqual(
+            (self.game.p1, self.game.p2, self.game.ball),
+            entities,
+        )
+        self.assertEqual(
+            (self.game.left_controller, self.game.right_controller),
+            controllers,
+        )
+        self.assertEqual(
+            (
+                self.game.p1.y,
+                self.game.p2.y,
+                self.game.ball.x,
+                self.game.ball.y,
+            ),
+            positions,
+        )
+        self.assertAlmostEqual(
+            self.game.ball.vx,
+            velocities[0] * 1.1,
+        )
+        self.assertAlmostEqual(
+            self.game.ball.vy,
+            velocities[1] * 1.1,
+        )
+        self.assertEqual(self.game.difficulty.elapsed, 7.5)
+
+    def test_manual_paddle_change_preserves_match_and_clamps(self):
+        self.game.start(BOTVBOT)
+        self.game.simulation.score1 = 2
+        self.game.p1.y = COURT_Y + 45
+        ball = self.game.ball
+        controllers = (
+            self.game.left_controller,
+            self.game.right_controller,
+        )
+
+        self.assertTrue(self.game.change_paddle_size(1))
+
+        self.assertEqual(self.game.score1, 2)
+        self.assertIs(self.game.ball, ball)
+        self.assertEqual(
+            (self.game.left_controller, self.game.right_controller),
+            controllers,
+        )
+        self.assertEqual(self.game.p1.height, 95)
+        self.assertEqual(self.game.p2.height, 95)
+        self.assertEqual(self.game.p1.y, COURT_Y + 47.5)
+
+    def test_auto_difficulty_applies_after_simulation_and_catches_up(self):
+        self.game.start(BOTVBOT)
+        events = []
+        difficulty = self.game.difficulty
+
+        def record_step(dt):
+            events.append("simulation-step")
+            return None
+
+        class RecordingDifficulty:
+            def __getattr__(self, name):
+                return getattr(difficulty, name)
+
+            def update(self, dt):
+                events.append("difficulty-update")
+                return difficulty.update(dt)
+
+        self.game.difficulty = RecordingDifficulty()
+
+        with patch.object(
+            self.game.left_controller,
+            "update",
+        ), patch.object(
+            self.game.right_controller,
+            "update",
+        ), patch.object(
+            self.game.simulation,
+            "step",
+            side_effect=record_step,
+        ):
+            self.game.update(45.0)
+
+        self.assertEqual(events, ["simulation-step", "difficulty-update"])
+        self.assertEqual(
+            self.game.difficulty.ball_speed_multiplier,
+            1.2,
+        )
+        self.assertEqual(self.game.difficulty.paddle_height, 80)
+        self.assertEqual(self.game.difficulty.elapsed, 5.0)
+        self.assertEqual(self.game.ball.speed_multiplier, 1.2)
+        self.assertEqual((self.game.p1.height, self.game.p2.height), (80, 80))
+
+    def test_auto_off_pauses_game_progression(self):
+        self.game.start(HUMAN)
+        self.game.difficulty.elapsed = 12.0
+        self.game.set_auto_difficulty(False)
+
+        with patch.object(
+            self.game.left_controller,
+            "update",
+        ), patch.object(
+            self.game.right_controller,
+            "update",
+        ), patch.object(
+            self.game.simulation,
+            "step",
+        ):
+            self.game.update(100.0)
+
+        self.assertEqual(self.game.difficulty.elapsed, 12.0)
+        self.assertEqual(
+            self.game.difficulty.ball_speed_multiplier,
+            1.0,
+        )
+        self.assertEqual(self.game.difficulty.paddle_height, 90)
+
+    def test_menu_does_not_advance_auto_timer(self):
+        self.game.start(HUMAN)
+        self.game.difficulty.elapsed = 6.0
+        self.game.state = MENU
+
+        self.game.update(100.0)
+
+        self.assertEqual(self.game.difficulty.elapsed, 6.0)
+        self.assertEqual(
+            self.game.difficulty.ball_speed_multiplier,
+            1.0,
+        )
+        self.assertEqual(self.game.difficulty.paddle_height, 90)
+
+    def test_mouse_and_keyboard_use_the_same_control_methods(self):
+        self.game.start(BOTVBOT)
+        left_generation_rect = pygame.Rect(10, 10, 20, 20)
+        right_generation_rect = pygame.Rect(40, 10, 20, 20)
+        speed_rect = pygame.Rect(70, 10, 20, 20)
+        paddle_rect = pygame.Rect(100, 10, 20, 20)
+        auto_rect = pygame.Rect(130, 10, 20, 20)
+        self.game.generation_buttons = [
+            (left_generation_rect, "left", 1, True),
+            (right_generation_rect, "right", 1, True),
+        ]
+        self.game.difficulty_buttons = [
+            (speed_rect, "ball_speed", 1, True),
+            (paddle_rect, "paddle_size", -1, True),
+            (auto_rect, "auto", None, True),
+        ]
+
+        with patch.object(
+            self.game,
+            "change_generation",
+        ) as change_generation, patch.object(
+            self.game,
+            "change_ball_speed",
+        ) as change_ball_speed, patch.object(
+            self.game,
+            "change_paddle_size",
+        ) as change_paddle_size, patch.object(
+            self.game,
+            "toggle_auto_difficulty",
+        ) as toggle_auto:
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    pos=left_generation_rect.center,
+                    button=1,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d)
+            )
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    pos=right_generation_rect.center,
+                    button=1,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
+            )
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    pos=speed_rect.center,
+                    button=1,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=pygame.K_EQUALS,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    pos=paddle_rect.center,
+                    button=1,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.KEYDOWN,
+                    key=pygame.K_LEFTBRACKET,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    pos=auto_rect.center,
+                    button=1,
+                )
+            )
+            self.game.handle_event(
+                pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t)
+            )
+
+        self.assertEqual(
+            change_generation.call_args_list,
+            [
+                call("left", 1),
+                call("left", 1),
+                call("right", 1),
+                call("right", 1),
+            ],
+        )
+        self.assertEqual(
+            change_ball_speed.call_args_list,
+            [call(1), call(1)],
+        )
+        self.assertEqual(
+            change_paddle_size.call_args_list,
+            [call(-1), call(-1)],
+        )
+        self.assertEqual(toggle_auto.call_count, 2)
+
+    def test_disabled_generation_button_is_a_complete_no_op(self):
+        self.game.start(BOTVBOT)
+        disabled_rect = pygame.Rect(10, 10, 20, 20)
+        self.game.generation_buttons = [
+            (disabled_rect, "left", -1, False)
+        ]
+        self.game.simulation.score1 = 4
+        self.game.change_ball_speed(1)
+        self.game.difficulty.elapsed = 8.0
+        entities = (self.game.p1, self.game.p2, self.game.ball)
+        controllers = (
+            self.game.left_controller,
+            self.game.right_controller,
+        )
+
+        with patch.object(
+            self.game,
+            "change_generation",
+        ) as change_generation:
+            self.game.handle_event(
+                pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN,
+                    pos=disabled_rect.center,
+                    button=1,
+                )
+            )
+
+        change_generation.assert_not_called()
+        self.assertEqual(self.game.score1, 4)
+        self.assertEqual(
+            (self.game.p1, self.game.p2, self.game.ball),
+            entities,
+        )
+        self.assertEqual(
+            (self.game.left_controller, self.game.right_controller),
+            controllers,
+        )
+        self.assertEqual(
+            (
+                self.game.difficulty.ball_speed_multiplier,
+                self.game.difficulty.elapsed,
+            ),
+            (1.1, 8.0),
+        )
+
+    def test_ball_speed_shortcuts_cover_main_and_keypad_keys(self):
+        self.game.start(HUMAN)
+
+        with patch.object(
+            self.game,
+            "change_ball_speed",
+        ) as change_ball_speed:
+            for key in (
+                pygame.K_MINUS,
+                pygame.K_KP_MINUS,
+                pygame.K_PLUS,
+                pygame.K_EQUALS,
+                pygame.K_KP_PLUS,
+            ):
+                self.game.handle_event(
+                    pygame.event.Event(pygame.KEYDOWN, key=key)
+                )
+
+        self.assertEqual(
+            change_ball_speed.call_args_list,
+            [
+                call(-1),
+                call(-1),
+                call(1),
+                call(1),
+                call(1),
+            ],
         )
 
     def test_escape_still_returns_to_menu(self):
@@ -324,8 +778,14 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
             def step(self, dt):
                 events.append("simulation-step")
 
+        class RecordingDifficulty:
+            def update(self, dt):
+                events.append("difficulty-update")
+                return 0
+
         self.game.state = HUMAN
         self.game.simulation = RecordingSimulation()
+        self.game.difficulty = RecordingDifficulty()
         self.game.left_controller = RecordingController("left")
         self.game.right_controller = RecordingController("right")
 
@@ -339,6 +799,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
                 "right-update",
                 "right-clamp",
                 "simulation-step",
+                "difficulty-update",
             ],
         )
 
@@ -393,8 +854,8 @@ class FrontendRenderingTests(unittest.TestCase):
             texts,
         )
         self.assertIn("Play against the saved best bot.", texts)
-        self.assertIn("Compare generation champions with", texts)
-        self.assertIn("generation 0.", texts)
+        self.assertIn("Compare any two generation", texts)
+        self.assertIn("champions.", texts)
         esc_call = next(
             draw_call
             for draw_call in draw_text_mock.call_args_list
@@ -421,9 +882,9 @@ class FrontendRenderingTests(unittest.TestCase):
         self.assertIn("BEST BOT", texts)
         self.assertIn("HUMAN VS BOT", texts)
 
-    def test_bot_hud_uses_current_and_last_generation_numbers(self):
+    def test_bot_hud_shows_independent_generations_and_fitness(self):
         self.game.start(BOTVBOT)
-        self.game.change_generation(1)
+        self.game.change_generation("left", 1)
 
         with patch("game.main.draw_text") as draw_text_mock:
             self.game.draw_hud()
@@ -431,33 +892,50 @@ class FrontendRenderingTests(unittest.TestCase):
         texts = self._drawn_texts(draw_text_mock)
         self.assertIn("GEN 1", texts)
         self.assertIn("GEN 0", texts)
-        self.assertIn(
-            "BOT VS BOT (GEN 1 / GEN 1) · TRAIN FITNESS 20.0",
-            texts,
+        self.assertIn("TRAIN FITNESS 20.0", texts)
+        self.assertIn("TRAIN FITNESS 10.5", texts)
+        self.assertIn("BOT VS BOT", texts)
+        self.assertEqual(
+            [
+                (side, offset, enabled)
+                for _, side, offset, enabled
+                in self.game.generation_buttons
+            ],
+            [
+                ("left", -1, True),
+                ("left", 1, False),
+                ("right", -1, False),
+                ("right", 1, True),
+            ],
         )
 
-    def test_footer_depends_only_on_match_mode(self):
+    def test_difficulty_panel_shows_values_and_mode_shortcuts(self):
         for state, expected in (
-            (HUMAN, "UP/W  ·  DOWN/S  ·  MOUSE - MOVE PADDLE"),
-            (BOTVBOT, "LEFT/RIGHT  ·  CHANGE GENERATION"),
+            (
+                HUMAN,
+                "−/+ BALL SPEED · [/] PADDLE SIZE · "
+                "T AUTO · W/S OR MOUSE MOVE",
+            ),
+            (
+                BOTVBOT,
+                "A/D LEFT GEN · ←/→ RIGHT GEN · "
+                "−/+ SPEED · [/] SIZE · T AUTO",
+            ),
         ):
             with self.subTest(state=state):
                 self.game.start(state)
-                with patch.object(self.game, "draw_grid"), patch.object(
-                    self.game,
-                    "draw_hud",
-                ), patch.object(
-                    self.game,
-                    "draw_court",
-                ), patch(
-                    "game.main.draw_text"
-                ) as draw_text_mock:
-                    self.game.draw_game()
+                with patch("game.main.draw_text") as draw_text_mock:
+                    self.game.draw_difficulty_panel()
 
-                self.assertEqual(
-                    self._drawn_texts(draw_text_mock),
-                    [expected],
-                )
+                texts = self._drawn_texts(draw_text_mock)
+                self.assertIn("BALL SPEED", texts)
+                self.assertIn("x1.00", texts)
+                self.assertIn("PADDLE SIZE", texts)
+                self.assertIn("90 px", texts)
+                self.assertIn("AUTO", texts)
+                self.assertIn("ON", texts)
+                self.assertIn(expected, texts)
+                self.assertEqual(len(self.game.difficulty_buttons), 5)
 
 
 class FrontendCliTests(unittest.TestCase):
@@ -626,6 +1104,7 @@ class FrontendTraceRegressionTests(unittest.TestCase):
             )
             game = create_game(BASELINE_GENOME, (baseline_record,))
             game.start(BOTVBOT)
+            game.set_auto_difficulty(False)
 
             def snapshot(step):
                 return {

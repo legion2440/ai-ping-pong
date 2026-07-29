@@ -11,17 +11,37 @@ class Paddle:
     simple parameter-based tracking behaviour (stand-in for a GA-evolved bot).
     """
 
-    def __init__(self, x, y, color, speed=420):
+    def __init__(self, x, y, color, speed=420, height=PADDLE_H):
+        if isinstance(height, bool) or not isinstance(height, int):
+            raise TypeError("height must be an int")
+        if height <= 0:
+            raise ValueError("height must be positive")
         self.x = x
         self.y = y  # center y
         self.color = color
         self.speed = speed
+        self.height = height
+
+    def set_height(self, height):
+        if isinstance(height, bool) or not isinstance(height, int):
+            raise TypeError("height must be an int")
+        if height <= 0:
+            raise ValueError("height must be positive")
+        if height == self.height:
+            return False
+        self.height = height
+        return True
 
     def rect(self):
-        return pygame.Rect(int(self.x - PADDLE_W / 2), int(self.y - PADDLE_H / 2), PADDLE_W, PADDLE_H)
+        return pygame.Rect(
+            int(self.x - PADDLE_W / 2),
+            int(self.y - self.height / 2),
+            PADDLE_W,
+            self.height,
+        )
 
     def clamp(self, top, bottom):
-        half = PADDLE_H / 2
+        half = self.height / 2
         self.y = max(top + half, min(bottom - half, self.y))
 
     def move_by(self, dy, top, bottom):

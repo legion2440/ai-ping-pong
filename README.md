@@ -70,7 +70,7 @@ models/best_bot.json
 logs/generations.csv
 ```
 
-Human vs Bot uses the saved global best genome. Bot vs Bot replays each generation champion against generation `0`.
+Human vs Bot uses the saved global best genome. Bot vs Bot can replay any two generation champions independently.
 
 ## ✨ Features
 
@@ -79,7 +79,9 @@ Human vs Bot uses the saved global best genome. Bot vs Bot replays each generati
 - Human vs Bot mode;
 - Bot vs Bot mode;
 - mouse and keyboard control for the human paddle;
-- generation switching with left and right arrow keys;
+- independent left/right generation selection with mouse or keyboard;
+- manual ball-speed and paddle-size controls;
+- optional automatic gradual difficulty every 20 seconds;
 - score tracking and paddle/ball collision handling;
 - adaptive physics substeps that prevent fast balls from tunneling through paddles;
 - deterministic headless matches.
@@ -136,7 +138,7 @@ Human vs Bot uses the saved global best genome. Bot vs Bot replays each generati
     +-----------------------------------------------------+
 ```
 
-The core game state is independent from the display. Training and evaluation use the same simulation and controller behavior as the visual frontend.
+The core game state is independent from the display. Training and evaluation use the same simulation and controller behavior as the visual frontend. Runtime difficulty belongs only to the visual `Game` through `game/difficulty.py`; `MatchSimulation` remains unaware of UI controls and automatic timing.
 
 ## 🧬 Bot genome
 
@@ -292,16 +294,36 @@ Controls:
 - mouse inside the court;
 - `W` / `S`;
 - up / down arrow keys;
+- clickable runtime-difficulty controls;
 - `Esc` returns to the menu.
 
 ### Bot vs Bot
 
-The selected generation champion plays on the left against generation `0` on the right.
+The left and right sides independently load any champion available in `logs/generations.csv`. Both start at generation `0`.
 
 Controls:
 
-- left / right arrow keys change the selected generation;
+- `A` / `D` change LEFT GEN;
+- left / right arrow keys change RIGHT GEN;
+- the arrow buttons beside each bot provide the same controls;
 - `Esc` returns to the menu.
+
+### Runtime difficulty
+
+Runtime difficulty is available in both game modes through the clickable bottom panel and keyboard shortcuts:
+
+- `-` / `+` or numpad `-` / `+` changes ball speed;
+- `[` / `]` changes both paddle heights;
+- `T` toggles automatic gradual difficulty.
+
+| Setting | Minimum | Default | Maximum | Step |
+|---|---:|---:|---:|---:|
+| Ball speed | `x0.50` | `x1.00` | `x2.00` | `0.10` |
+| Paddle height | `50 px` | `90 px` | `120 px` | `5 px` |
+
+AUTO is ON by default. Every 20 seconds of active match time it adds `0.10` to ball speed and removes `5 px` from paddle height, independently clamped to the limits above. Turning AUTO off pauses its timer; turning it back on resumes from the saved remainder. Manual changes do not restart that timer.
+
+Changing difficulty preserves the score, current rally, entity positions, and controllers. Paddle resizing preserves each center before clamping it to the court. A goal preserves difficulty, and the next serve uses the current speed multiplier. A real generation change or entering a new mode resets the match and difficulty; pressing a disabled generation boundary control changes nothing.
 
 Screenshots:
 
@@ -361,6 +383,7 @@ The test suite covers:
 - SVG generation;
 - screenshot capture;
 - frontend integration;
+- runtime difficulty and independent generation controls;
 - edge cases and reproducibility.
 
 ## 📁 Project structure
@@ -373,6 +396,7 @@ ai-ping-pong/
 ├── game/
 │   ├── ball.py
 │   ├── controllers.py
+│   ├── difficulty.py
 │   ├── main.py
 │   ├── match_runner.py
 │   ├── paddle.py
@@ -406,8 +430,9 @@ ai-ping-pong/
 - Training is separate from the visual game and does not run in the background during gameplay.
 - Human vs Bot always loads the committed best bot unless another model path is supplied.
 - Bot vs Bot replays generation champions; it does not retrain them.
-- `FITNESS` in the HUD is the historical training fitness of the selected generation champion, not the current match score.
+- `TRAIN FITNESS` in the HUD is the historical training fitness of the selected generation champion, not the current match score.
 - Generation numbering starts from `0`, so a 24-generation history contains generations `0..23`.
+- Manual and automatic gradual difficulty are implemented visual-game bonuses and do not alter canonical training or evaluation.
 - The baseline genome `260,0,8` is used for training and evaluation; it is not the default Human vs Bot opponent.
 - The committed JSON model is the implemented best-bot persistence bonus.
 

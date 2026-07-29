@@ -1,6 +1,6 @@
 import pygame
 
-SCREEN_W, SCREEN_H = 900, 620
+SCREEN_W, SCREEN_H = 900, 690
 FPS = 60
 
 COURT_W, COURT_H = 860, 460
@@ -28,6 +28,10 @@ COLORS = {
 }
 
 _font_cache = {}
+
+
+def clear_font_cache():
+    _font_cache.clear()
 
 
 def font(size, bold=False):

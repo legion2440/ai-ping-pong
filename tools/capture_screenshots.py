@@ -48,7 +48,7 @@ def main():
             game.update(SCREENSHOT_DT)
         _save_screen(game, output_directory / "generation-0.png")
 
-        game.change_generation(len(records) - 1)
+        game.change_generation("left", len(records) - 1)
         for _ in range(SCREENSHOT_STEPS):
             game.update(SCREENSHOT_DT)
         _save_screen(game, output_directory / "generation-final.png")

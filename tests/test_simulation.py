@@ -185,6 +185,25 @@ class MatchSimulationTests(unittest.TestCase):
             paddle_rect.right,
         )
 
+    def test_increased_speed_does_not_tunnel_through_right_paddle(self):
+        simulation = self.simulation
+        paddle_rect = simulation.p2.rect()
+        simulation.ball.set_speed_multiplier(2.0)
+        simulation.ball.x = paddle_rect.left - BALL_SIZE / 2 - 60
+        simulation.ball.y = simulation.p2.y
+        simulation.ball.vx = 1360
+        simulation.ball.vy = 0
+
+        events = simulation.step(120 / simulation.ball.vx)
+
+        self.assertTrue(events.right_return)
+        self.assertLess(simulation.ball.vx, 0)
+        self.assertEqual((simulation.score1, simulation.score2), (0, 0))
+        self.assertLessEqual(
+            simulation.ball.rect().right,
+            paddle_rect.left,
+        )
+
     def test_left_goal_increases_right_score_and_resets_ball(self):
         simulation = self.simulation
         simulation.ball.x = COURT_X - 31
@@ -210,6 +229,17 @@ class MatchSimulationTests(unittest.TestCase):
             (simulation.ball.x, simulation.ball.y),
             (COURT_X + COURT_W / 2, COURT_Y + COURT_H / 2),
         )
+
+    def test_goal_reset_keeps_the_current_ball_multiplier(self):
+        simulation = self.simulation
+        simulation.ball.set_speed_multiplier(1.5)
+        simulation.ball.x = COURT_X + COURT_W + 31
+
+        simulation.step(0)
+
+        self.assertEqual(simulation.ball.speed_multiplier, 1.5)
+        self.assertEqual(abs(simulation.ball.vx), 390.0)
+        self.assertLessEqual(abs(simulation.ball.vy), 150.0)
 
     def test_reset_recreates_initial_match_state(self):
         simulation = self.simulation
