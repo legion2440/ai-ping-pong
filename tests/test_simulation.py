@@ -53,6 +53,7 @@ class MatchSimulationTests(unittest.TestCase):
     def test_ball_bounces_off_top_wall_and_stays_inside(self):
         ball = self.simulation.ball
         ball.y = COURT_Y + BALL_SIZE / 2
+        ball.vx = 0
         ball.vy = -100
 
         self.simulation.step(0.1)
@@ -63,6 +64,7 @@ class MatchSimulationTests(unittest.TestCase):
     def test_ball_bounces_off_bottom_wall_and_stays_inside(self):
         ball = self.simulation.ball
         ball.y = COURT_Y + COURT_H - BALL_SIZE / 2
+        ball.vx = 0
         ball.vy = 100
 
         self.simulation.step(0.1)
@@ -119,6 +121,39 @@ class MatchSimulationTests(unittest.TestCase):
         simulation.ball.vy = 0
 
         events = simulation.step(horizontal_distance / 680)
+
+        self.assertTrue(events.right_return)
+        self.assertLess(simulation.ball.vx, 0)
+        self.assertEqual((simulation.score1, simulation.score2), (0, 0))
+        self.assertLessEqual(
+            simulation.ball.rect().right,
+            paddle_rect.left,
+        )
+
+    def test_sub_collision_zone_step_does_not_tunnel_through_right_paddle(self):
+        simulation = self.simulation
+        paddle_rect = simulation.p2.rect()
+        horizontal_distance = 29.5
+        simulation.ball.x = 839.9
+        simulation.ball.y = simulation.p2.y
+        simulation.ball.vx = 680
+        simulation.ball.vy = 0
+
+        self.assertEqual(paddle_rect.x, 847)
+        self.assertEqual(
+            (simulation.ball.rect().left, simulation.ball.rect().right),
+            (831, 847),
+        )
+        skipped_rect = pygame.Rect(
+            int(simulation.ball.x + horizontal_distance - BALL_SIZE / 2),
+            simulation.ball.rect().top,
+            BALL_SIZE,
+            BALL_SIZE,
+        )
+        self.assertEqual((skipped_rect.left, skipped_rect.right), (861, 877))
+        self.assertFalse(skipped_rect.colliderect(paddle_rect))
+
+        events = simulation.step(horizontal_distance / simulation.ball.vx)
 
         self.assertTrue(events.right_return)
         self.assertLess(simulation.ball.vx, 0)

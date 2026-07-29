@@ -53,14 +53,11 @@ class MatchSimulation:
         self.score2 = 0
 
     def step(self, dt):
-        collision_zone = PADDLE_W + BALL_SIZE
         horizontal_distance = abs(self.ball.vx) * dt
-        if horizontal_distance < collision_zone:
-            return self._step_once(dt)
-
+        max_distance = (PADDLE_W + BALL_SIZE) / 2
         substeps = max(
             1,
-            math.ceil(horizontal_distance / (collision_zone / 2)),
+            math.ceil(horizontal_distance / max_distance),
         )
         sub_dt = dt / substeps
         left_return = False
