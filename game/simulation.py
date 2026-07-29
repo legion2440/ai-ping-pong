@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 if __package__:
@@ -12,6 +13,7 @@ if __package__:
         COURT_Y,
         HUMAN_SPEED,
         PADDLE_MARGIN,
+        PADDLE_W,
     )
 else:
     from ball import Ball
@@ -25,6 +27,7 @@ else:
         COURT_Y,
         HUMAN_SPEED,
         PADDLE_MARGIN,
+        PADDLE_W,
     )
 
 
@@ -50,6 +53,36 @@ class MatchSimulation:
         self.score2 = 0
 
     def step(self, dt):
+        collision_zone = PADDLE_W + BALL_SIZE
+        horizontal_distance = abs(self.ball.vx) * dt
+        if horizontal_distance < collision_zone:
+            return self._step_once(dt)
+
+        substeps = max(
+            1,
+            math.ceil(horizontal_distance / (collision_zone / 2)),
+        )
+        sub_dt = dt / substeps
+        left_return = False
+        right_return = False
+
+        for _ in range(substeps):
+            events = self._step_once(sub_dt)
+            left_return = left_return or events.left_return
+            right_return = right_return or events.right_return
+            if events.point_winner is not None:
+                return StepEvents(
+                    left_return=left_return,
+                    right_return=right_return,
+                    point_winner=events.point_winner,
+                )
+
+        return StepEvents(
+            left_return=left_return,
+            right_return=right_return,
+        )
+
+    def _step_once(self, dt):
         left_return = False
         right_return = False
         point_winner = None

@@ -14,6 +14,7 @@ from game.utils import (
     COURT_Y,
     HUMAN_SPEED,
     PADDLE_MARGIN,
+    PADDLE_W,
 )
 
 
@@ -104,6 +105,50 @@ class MatchSimulationTests(unittest.TestCase):
         next_events = simulation.step(0)
         self.assertEqual(next_events, StepEvents())
         self.assertEqual(simulation.ball.vx, velocity_after_collision)
+
+    def test_large_step_does_not_tunnel_through_right_paddle(self):
+        simulation = self.simulation
+        paddle_rect = simulation.p2.rect()
+        collision_zone = PADDLE_W + BALL_SIZE
+        horizontal_distance = collision_zone * 2
+        simulation.ball.x = (
+            paddle_rect.left - BALL_SIZE / 2 - collision_zone
+        )
+        simulation.ball.y = simulation.p2.y
+        simulation.ball.vx = 680
+        simulation.ball.vy = 0
+
+        events = simulation.step(horizontal_distance / 680)
+
+        self.assertTrue(events.right_return)
+        self.assertLess(simulation.ball.vx, 0)
+        self.assertEqual((simulation.score1, simulation.score2), (0, 0))
+        self.assertLessEqual(
+            simulation.ball.rect().right,
+            paddle_rect.left,
+        )
+
+    def test_large_step_does_not_tunnel_through_left_paddle(self):
+        simulation = self.simulation
+        paddle_rect = simulation.p1.rect()
+        collision_zone = PADDLE_W + BALL_SIZE
+        horizontal_distance = collision_zone * 2
+        simulation.ball.x = (
+            paddle_rect.right + BALL_SIZE / 2 + collision_zone
+        )
+        simulation.ball.y = simulation.p1.y
+        simulation.ball.vx = -680
+        simulation.ball.vy = 0
+
+        events = simulation.step(horizontal_distance / 680)
+
+        self.assertTrue(events.left_return)
+        self.assertGreater(simulation.ball.vx, 0)
+        self.assertEqual((simulation.score1, simulation.score2), (0, 0))
+        self.assertGreaterEqual(
+            simulation.ball.rect().left,
+            paddle_rect.right,
+        )
 
     def test_left_goal_increases_right_score_and_resets_ball(self):
         simulation = self.simulation
