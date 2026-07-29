@@ -2,16 +2,16 @@
 
 ## Current status
 
-This repository currently contains a visual Pygame prototype with Human vs
-Bot and Bot vs Bot modes. Match state and physics are separated into
-`game/simulation.py`, which can run without creating a window.
+This repository contains a visual Pygame frontend with Human vs Bot and Bot vs
+Bot modes. Match state and physics are separated into `game/simulation.py`,
+which can run without creating a window. Training is performed headlessly and
+separately from the GUI.
 
 Bot behavior is parameterized by paddle speed, reaction time, and movement
-threshold. The UI currently uses a baseline genome matching the original bot
-behavior as the fixed training opponent. Headless training evolves an
-in-memory random population and saves deterministic progress and model
-artifacts. The frontend loads those artifacts to replay trained bots, but does
-not run training itself.
+threshold. The frontend loads the canonical trained model and its 24-generation
+history: Human vs Bot uses the saved global best, while Bot vs Bot replays
+generation champions against generation `0`. The `260,0,8` baseline is the
+fixed training and evaluation opponent; it is not the bot loaded by the GUI.
 
 ## Requirements
 
@@ -130,6 +130,33 @@ Default training parameters:
 - Score weight: `100.0`
 - Return weight: `1.0`
 
+### Canonical training run
+
+The committed model and generation history were produced by a larger
+deterministic run. These parameters describe the canonical artifacts, not the
+CLI defaults above:
+
+- Evolution seed: `20260730`
+- Population size: `32`
+- Evaluated generations: `24`
+- Elite count: `4`
+- Tournament size: `4`
+- Crossover rate: `0.8`
+- Mutation rate: `0.2`
+- Mutation sigma: `0.1` of each gene's full range
+- Training seeds: `2000,2001,2002,2003,2004,2005,2006,2007`
+- Match limit: `3600` steps or `5` points
+- Baseline opponent: `260,0,8`
+- Score weight: `100.0`
+- Return weight: `1.0`
+
+Promoted best genome:
+
+- Paddle speed: `420.0`
+- Reaction time: `0.039498692275418835`
+- Movement threshold: `29.790193846648812`
+- Training fitness: `218.375`
+
 The evolution seed controls initial genomes, selection, crossover, and
 mutation. Match seeds independently control match physics. Reusing all
 arguments produces the same result without changing Python's global random
@@ -157,8 +184,8 @@ generation,best_fitness,mean_fitness,worst_fitness,paddle_speed,reaction_time,mo
 
 The JSON model uses schema version `1` and contains the global best fitness,
 the best genome, the complete evolution config, and the complete fitness
-config. Saving this reusable model is an implemented bonus; it is not yet
-loaded by the GUI.
+config. Saving this reusable model is an implemented bonus, and the frontend
+loads it for Human vs Bot.
 
 Suppress progress while still saving artifacts:
 
@@ -180,6 +207,53 @@ from ga.artifacts import load_best_genome
 genome = load_best_genome("models/best_bot.json")
 ```
 
+## Deterministic evaluation
+
+Reproduce the canonical locked evaluation and its fitness chart:
+
+```powershell
+python -m ga.evaluation
+```
+
+The locked seeds `1000..1019` were not used during training. Every evaluated
+genome plays once on the left and once on the right for each seed. Training
+mean fitness is read directly from the canonical CSV; held-out fitness comes
+from real matches against the fixed baseline. The final champion is also
+evaluated directly against generation `0`.
+
+A GUI replay is useful for inspection, but is not formal evidence of
+improvement. The deterministic numerical report provides that evidence:
+
+| Metric | Generation 0 | Generation 23 | Result |
+| --- | ---: | ---: | ---: |
+| Training mean fitness | -144.814453125 | 198.83984375 | +343.654296875 |
+| Held-out fitness | 155.05 | 182.225 | +27.175 |
+| Final vs initial | — | 13 W / 27 D / 0 L | 13:0 points |
+
+[Full deterministic evaluation report](reports/evaluation.json)
+
+![Training and held-out fitness by generation](docs/fitness_progress.svg)
+
+The chart shows training best, training mean, and held-out champion fitness
+for every generation. The saved history contains generation champions rather
+than complete historical populations, so held-out evaluation is available
+for those champions.
+
+## Frontend screenshots
+
+![Main menu](docs/screenshots/menu.png)
+
+![Generation 0 replay](docs/screenshots/generation-0.png)
+
+![Final generation replay](docs/screenshots/generation-final.png)
+
+In the final replay, generation `23` plays against generation `0`. The
+screenshots can be regenerated with:
+
+```powershell
+python -m tools.capture_screenshots
+```
+
 ## Controls
 
 - Move the human paddle with the mouse while the pointer is over the court.
@@ -192,21 +266,23 @@ genome = load_best_genome("models/best_bot.json")
 
 ```text
 ai-ping-pong/
+├── docs/       # Fitness chart and frontend screenshots
 ├── game/       # Pygame frontend, controllers, simulation, and entities
-├── ga/         # GA, training CLI, and artifact serialization
-├── logs/       # Canonical per-generation fitness report
+├── ga/         # GA, training, evaluation, and artifact serialization
+├── logs/       # Canonical per-generation fitness history
 ├── models/     # Canonical saved best genome
+├── reports/    # Deterministic locked evaluation
 ├── tests/      # Test package
+├── tools/      # Screenshot capture utility
 ├── requirements.txt
 └── README.md
 ```
 
-## Planned training visualization and integration
+## Planned integration
 
 The following items are intentionally not implemented yet:
 
-- A fitness chart
 - Training inside the GUI
-- Training screenshots or GIFs
-- Evidence of improvement from a long training run
-- Late-generation versus early-generation evaluation
+- API control
+- Gradual difficulty adjustment
+- GIF recording

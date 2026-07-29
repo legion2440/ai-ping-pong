@@ -1,0 +1,687 @@
+{
+  "evaluation_config": {
+    "baseline_genome": {
+      "movement_threshold": 8.0,
+      "paddle_speed": 260.0,
+      "reaction_time": 0.0
+    },
+    "match_config": {
+      "dt": 0.016666666666666666,
+      "max_steps": 3600,
+      "score_limit": 5
+    },
+    "return_weight": 1.0,
+    "score_weight": 100.0,
+    "seeds": [
+      1000,
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008,
+      1009,
+      1010,
+      1011,
+      1012,
+      1013,
+      1014,
+      1015,
+      1016,
+      1017,
+      1018,
+      1019
+    ]
+  },
+  "final_vs_initial": {
+    "draws": 27,
+    "losses": 0,
+    "matches": 40,
+    "outperformed": true,
+    "points_against": 0,
+    "points_for": 13,
+    "returns": 678,
+    "wins": 13
+  },
+  "generations": [
+    {
+      "generation": 0,
+      "genome": {
+        "movement_threshold": 24.11316865187869,
+        "paddle_speed": 393.55259969723795,
+        "reaction_time": 0.013361995872360278
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 155.05,
+        "genome": {
+          "movement_threshold": 24.11316865187869,
+          "paddle_speed": 393.55259969723795,
+          "reaction_time": 0.013361995872360278
+        },
+        "losses": 1,
+        "matches": 40,
+        "points_against": 1,
+        "points_for": 58,
+        "returns": 502,
+        "wins": 39
+      },
+      "training_best_fitness": 137.625,
+      "training_mean_fitness": -144.814453125,
+      "training_worst_fitness": -353.375
+    },
+    {
+      "generation": 1,
+      "genome": {
+        "movement_threshold": 24.11316865187869,
+        "paddle_speed": 393.55259969723795,
+        "reaction_time": 0.013361995872360278
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 155.05,
+        "genome": {
+          "movement_threshold": 24.11316865187869,
+          "paddle_speed": 393.55259969723795,
+          "reaction_time": 0.013361995872360278
+        },
+        "losses": 1,
+        "matches": 40,
+        "points_against": 1,
+        "points_for": 58,
+        "returns": 502,
+        "wins": 39
+      },
+      "training_best_fitness": 137.625,
+      "training_mean_fitness": 12.97265625,
+      "training_worst_fitness": -233.5625
+    },
+    {
+      "generation": 2,
+      "genome": {
+        "movement_threshold": 26.128092893195937,
+        "paddle_speed": 389.41239284394135,
+        "reaction_time": 0.035558217225020006
+      },
+      "held_out": {
+        "draws": 1,
+        "fitness": 134.675,
+        "genome": {
+          "movement_threshold": 26.128092893195937,
+          "paddle_speed": 389.41239284394135,
+          "reaction_time": 0.035558217225020006
+        },
+        "losses": 5,
+        "matches": 40,
+        "points_against": 8,
+        "points_for": 57,
+        "returns": 487,
+        "wins": 34
+      },
+      "training_best_fitness": 180.9375,
+      "training_mean_fitness": 114.08984375,
+      "training_worst_fitness": 31.1875
+    },
+    {
+      "generation": 3,
+      "genome": {
+        "movement_threshold": 26.128092893195937,
+        "paddle_speed": 389.41239284394135,
+        "reaction_time": 0.035558217225020006
+      },
+      "held_out": {
+        "draws": 1,
+        "fitness": 134.675,
+        "genome": {
+          "movement_threshold": 26.128092893195937,
+          "paddle_speed": 389.41239284394135,
+          "reaction_time": 0.035558217225020006
+        },
+        "losses": 5,
+        "matches": 40,
+        "points_against": 8,
+        "points_for": 57,
+        "returns": 487,
+        "wins": 34
+      },
+      "training_best_fitness": 180.9375,
+      "training_mean_fitness": 140.5390625,
+      "training_worst_fitness": 37.0
+    },
+    {
+      "generation": 4,
+      "genome": {
+        "movement_threshold": 26.128092893195937,
+        "paddle_speed": 414.746019156481,
+        "reaction_time": 0.035558217225020006
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 172.35,
+        "genome": {
+          "movement_threshold": 26.128092893195937,
+          "paddle_speed": 414.746019156481,
+          "reaction_time": 0.035558217225020006
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 64,
+        "returns": 494,
+        "wins": 40
+      },
+      "training_best_fitness": 187.25,
+      "training_mean_fitness": 154.041015625,
+      "training_worst_fitness": 42.9375
+    },
+    {
+      "generation": 5,
+      "genome": {
+        "movement_threshold": 24.8282015187313,
+        "paddle_speed": 399.62957508130523,
+        "reaction_time": 0.03895113221112472
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 145.0,
+        "genome": {
+          "movement_threshold": 24.8282015187313,
+          "paddle_speed": 399.62957508130523,
+          "reaction_time": 0.03895113221112472
+        },
+        "losses": 5,
+        "matches": 40,
+        "points_against": 5,
+        "points_for": 58,
+        "returns": 500,
+        "wins": 35
+      },
+      "training_best_fitness": 199.5625,
+      "training_mean_fitness": 169.095703125,
+      "training_worst_fitness": 118.6875
+    },
+    {
+      "generation": 6,
+      "genome": {
+        "movement_threshold": 24.8282015187313,
+        "paddle_speed": 399.62957508130523,
+        "reaction_time": 0.03895113221112472
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 145.0,
+        "genome": {
+          "movement_threshold": 24.8282015187313,
+          "paddle_speed": 399.62957508130523,
+          "reaction_time": 0.03895113221112472
+        },
+        "losses": 5,
+        "matches": 40,
+        "points_against": 5,
+        "points_for": 58,
+        "returns": 500,
+        "wins": 35
+      },
+      "training_best_fitness": 199.5625,
+      "training_mean_fitness": 161.412109375,
+      "training_worst_fitness": 55.1875
+    },
+    {
+      "generation": 7,
+      "genome": {
+        "movement_threshold": 24.45362977832428,
+        "paddle_speed": 414.746019156481,
+        "reaction_time": 0.035558217225020006
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 155.125,
+        "genome": {
+          "movement_threshold": 24.45362977832428,
+          "paddle_speed": 414.746019156481,
+          "reaction_time": 0.035558217225020006
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 57,
+        "returns": 505,
+        "wins": 40
+      },
+      "training_best_fitness": 199.8125,
+      "training_mean_fitness": 182.349609375,
+      "training_worst_fitness": 137.25
+    },
+    {
+      "generation": 8,
+      "genome": {
+        "movement_threshold": 24.72243680288448,
+        "paddle_speed": 396.8084573715166,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 2,
+        "fitness": 140.0,
+        "genome": {
+          "movement_threshold": 24.72243680288448,
+          "paddle_speed": 396.8084573715166,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 2,
+        "matches": 40,
+        "points_against": 5,
+        "points_for": 56,
+        "returns": 500,
+        "wins": 36
+      },
+      "training_best_fitness": 205.6875,
+      "training_mean_fitness": 179.1640625,
+      "training_worst_fitness": 55.75
+    },
+    {
+      "generation": 9,
+      "genome": {
+        "movement_threshold": 24.72243680288448,
+        "paddle_speed": 396.8084573715166,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 2,
+        "fitness": 140.0,
+        "genome": {
+          "movement_threshold": 24.72243680288448,
+          "paddle_speed": 396.8084573715166,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 2,
+        "matches": 40,
+        "points_against": 5,
+        "points_for": 56,
+        "returns": 500,
+        "wins": 36
+      },
+      "training_best_fitness": 205.6875,
+      "training_mean_fitness": 187.55859375,
+      "training_worst_fitness": 149.625
+    },
+    {
+      "generation": 10,
+      "genome": {
+        "movement_threshold": 24.72243680288448,
+        "paddle_speed": 396.8084573715166,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 2,
+        "fitness": 140.0,
+        "genome": {
+          "movement_threshold": 24.72243680288448,
+          "paddle_speed": 396.8084573715166,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 2,
+        "matches": 40,
+        "points_against": 5,
+        "points_for": 56,
+        "returns": 500,
+        "wins": 36
+      },
+      "training_best_fitness": 205.6875,
+      "training_mean_fitness": 179.029296875,
+      "training_worst_fitness": 105.75
+    },
+    {
+      "generation": 11,
+      "genome": {
+        "movement_threshold": 24.72243680288448,
+        "paddle_speed": 396.8084573715166,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 2,
+        "fitness": 140.0,
+        "genome": {
+          "movement_threshold": 24.72243680288448,
+          "paddle_speed": 396.8084573715166,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 2,
+        "matches": 40,
+        "points_against": 5,
+        "points_for": 56,
+        "returns": 500,
+        "wins": 36
+      },
+      "training_best_fitness": 205.6875,
+      "training_mean_fitness": 183.451171875,
+      "training_worst_fitness": 86.75
+    },
+    {
+      "generation": 12,
+      "genome": {
+        "movement_threshold": 24.71564313455655,
+        "paddle_speed": 413.67025111107466,
+        "reaction_time": 0.039332173839260354
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 157.6,
+        "genome": {
+          "movement_threshold": 24.71564313455655,
+          "paddle_speed": 413.67025111107466,
+          "reaction_time": 0.039332173839260354
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 58,
+        "returns": 504,
+        "wins": 40
+      },
+      "training_best_fitness": 205.8125,
+      "training_mean_fitness": 168.857421875,
+      "training_worst_fitness": -7.5
+    },
+    {
+      "generation": 13,
+      "genome": {
+        "movement_threshold": 24.71564313455655,
+        "paddle_speed": 413.67025111107466,
+        "reaction_time": 0.039332173839260354
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 157.6,
+        "genome": {
+          "movement_threshold": 24.71564313455655,
+          "paddle_speed": 413.67025111107466,
+          "reaction_time": 0.039332173839260354
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 58,
+        "returns": 504,
+        "wins": 40
+      },
+      "training_best_fitness": 205.8125,
+      "training_mean_fitness": 182.806640625,
+      "training_worst_fitness": 106.0
+    },
+    {
+      "generation": 14,
+      "genome": {
+        "movement_threshold": 24.71564313455655,
+        "paddle_speed": 413.67025111107466,
+        "reaction_time": 0.039332173839260354
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 157.6,
+        "genome": {
+          "movement_threshold": 24.71564313455655,
+          "paddle_speed": 413.67025111107466,
+          "reaction_time": 0.039332173839260354
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 58,
+        "returns": 504,
+        "wins": 40
+      },
+      "training_best_fitness": 205.8125,
+      "training_mean_fitness": 190.79296875,
+      "training_worst_fitness": 124.6875
+    },
+    {
+      "generation": 15,
+      "genome": {
+        "movement_threshold": 28.87742089969245,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 167.45,
+        "genome": {
+          "movement_threshold": 28.87742089969245,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 62,
+        "returns": 498,
+        "wins": 40
+      },
+      "training_best_fitness": 205.875,
+      "training_mean_fitness": 184.3671875,
+      "training_worst_fitness": 99.3125
+    },
+    {
+      "generation": 16,
+      "genome": {
+        "movement_threshold": 28.87742089969245,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 167.45,
+        "genome": {
+          "movement_threshold": 28.87742089969245,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 62,
+        "returns": 498,
+        "wins": 40
+      },
+      "training_best_fitness": 205.875,
+      "training_mean_fitness": 194.9453125,
+      "training_worst_fitness": 162.3125
+    },
+    {
+      "generation": 17,
+      "genome": {
+        "movement_threshold": 28.87742089969245,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 167.45,
+        "genome": {
+          "movement_threshold": 28.87742089969245,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 62,
+        "returns": 498,
+        "wins": 40
+      },
+      "training_best_fitness": 205.875,
+      "training_mean_fitness": 183.76171875,
+      "training_worst_fitness": 36.0625
+    },
+    {
+      "generation": 18,
+      "genome": {
+        "movement_threshold": 28.87742089969245,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 167.45,
+        "genome": {
+          "movement_threshold": 28.87742089969245,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 62,
+        "returns": 498,
+        "wins": 40
+      },
+      "training_best_fitness": 205.875,
+      "training_mean_fitness": 183.435546875,
+      "training_worst_fitness": 61.375
+    },
+    {
+      "generation": 19,
+      "genome": {
+        "movement_threshold": 28.87742089969245,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.03950076109093385
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 167.45,
+        "genome": {
+          "movement_threshold": 28.87742089969245,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.03950076109093385
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 62,
+        "returns": 498,
+        "wins": 40
+      },
+      "training_best_fitness": 205.875,
+      "training_mean_fitness": 175.236328125,
+      "training_worst_fitness": -51.3125
+    },
+    {
+      "generation": 20,
+      "genome": {
+        "movement_threshold": 28.926227282089215,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.039492164144205574
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 165.025,
+        "genome": {
+          "movement_threshold": 28.926227282089215,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.039492164144205574
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 61,
+        "returns": 501,
+        "wins": 40
+      },
+      "training_best_fitness": 212.0,
+      "training_mean_fitness": 174.0234375,
+      "training_worst_fitness": 93.0625
+    },
+    {
+      "generation": 21,
+      "genome": {
+        "movement_threshold": 28.926227282089215,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.039492164144205574
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 165.025,
+        "genome": {
+          "movement_threshold": 28.926227282089215,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.039492164144205574
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 61,
+        "returns": 501,
+        "wins": 40
+      },
+      "training_best_fitness": 212.0,
+      "training_mean_fitness": 186.220703125,
+      "training_worst_fitness": 93.1875
+    },
+    {
+      "generation": 22,
+      "genome": {
+        "movement_threshold": 28.926227282089215,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.039492164144205574
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 165.025,
+        "genome": {
+          "movement_threshold": 28.926227282089215,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.039492164144205574
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 61,
+        "returns": 501,
+        "wins": 40
+      },
+      "training_best_fitness": 212.0,
+      "training_mean_fitness": 195.3125,
+      "training_worst_fitness": 143.0625
+    },
+    {
+      "generation": 23,
+      "genome": {
+        "movement_threshold": 29.790193846648812,
+        "paddle_speed": 420.0,
+        "reaction_time": 0.039498692275418835
+      },
+      "held_out": {
+        "draws": 0,
+        "fitness": 182.225,
+        "genome": {
+          "movement_threshold": 29.790193846648812,
+          "paddle_speed": 420.0,
+          "reaction_time": 0.039498692275418835
+        },
+        "losses": 0,
+        "matches": 40,
+        "points_against": 0,
+        "points_for": 68,
+        "returns": 489,
+        "wins": 40
+      },
+      "training_best_fitness": 218.375,
+      "training_mean_fitness": 198.83984375,
+      "training_worst_fitness": 130.625
+    }
+  ],
+  "held_out_progress": {
+    "delta": 27.174999999999983,
+    "final_fitness": 182.225,
+    "improved": true,
+    "initial_fitness": 155.05
+  },
+  "schema_version": 1,
+  "training_progress": {
+    "delta": 343.654296875,
+    "final_mean_fitness": 198.83984375,
+    "improved": true,
+    "initial_mean_fitness": -144.814453125
+  }
+}

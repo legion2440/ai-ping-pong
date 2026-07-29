@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500">
+  <title>Fitness progress</title>
+  <desc>Training best, training mean, and held-out champion fitness by generation.</desc>
+  <rect width="900" height="500" fill="#0e0f14"/>
+  <rect x="90" y="70" width="780" height="360" fill="#181a22" stroke="#2e313f"/>
+  <text x="450.00" y="35" fill="#dee0e8" font-family="monospace" font-size="22" font-weight="bold" text-anchor="middle">Fitness progress</text>
+  <line x1="90" y1="70.00" x2="870" y2="70.00" stroke="#1e202a"/>
+  <text x="78" y="74.00" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="end">254.69</text>
+  <line x1="90" y1="142.00" x2="870" y2="142.00" stroke="#1e202a"/>
+  <text x="78" y="146.00" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="end">167.53</text>
+  <line x1="90" y1="214.00" x2="870" y2="214.00" stroke="#1e202a"/>
+  <text x="78" y="218.00" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="end">80.36</text>
+  <line x1="90" y1="286.00" x2="870" y2="286.00" stroke="#1e202a"/>
+  <text x="78" y="290.00" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="end">-6.8</text>
+  <line x1="90" y1="358.00" x2="870" y2="358.00" stroke="#1e202a"/>
+  <text x="78" y="362.00" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="end">-93.97</text>
+  <line x1="90" y1="430.00" x2="870" y2="430.00" stroke="#1e202a"/>
+  <text x="78" y="434.00" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="end">-181.13</text>
+  <line x1="90.00" y1="70" x2="90.00" y2="430" stroke="#1e202a"/>
+  <text x="90.00" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">0</text>
+  <line x1="123.91" y1="70" x2="123.91" y2="430" stroke="#1e202a"/>
+  <text x="123.91" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">1</text>
+  <line x1="157.83" y1="70" x2="157.83" y2="430" stroke="#1e202a"/>
+  <text x="157.83" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">2</text>
+  <line x1="191.74" y1="70" x2="191.74" y2="430" stroke="#1e202a"/>
+  <text x="191.74" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">3</text>
+  <line x1="225.65" y1="70" x2="225.65" y2="430" stroke="#1e202a"/>
+  <text x="225.65" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">4</text>
+  <line x1="259.57" y1="70" x2="259.57" y2="430" stroke="#1e202a"/>
+  <text x="259.57" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">5</text>
+  <line x1="293.48" y1="70" x2="293.48" y2="430" stroke="#1e202a"/>
+  <text x="293.48" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">6</text>
+  <line x1="327.39" y1="70" x2="327.39" y2="430" stroke="#1e202a"/>
+  <text x="327.39" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">7</text>
+  <line x1="361.30" y1="70" x2="361.30" y2="430" stroke="#1e202a"/>
+  <text x="361.30" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">8</text>
+  <line x1="395.22" y1="70" x2="395.22" y2="430" stroke="#1e202a"/>
+  <text x="395.22" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">9</text>
+  <line x1="429.13" y1="70" x2="429.13" y2="430" stroke="#1e202a"/>
+  <text x="429.13" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">10</text>
+  <line x1="463.04" y1="70" x2="463.04" y2="430" stroke="#1e202a"/>
+  <text x="463.04" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">11</text>
+  <line x1="496.96" y1="70" x2="496.96" y2="430" stroke="#1e202a"/>
+  <text x="496.96" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">12</text>
+  <line x1="530.87" y1="70" x2="530.87" y2="430" stroke="#1e202a"/>
+  <text x="530.87" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">13</text>
+  <line x1="564.78" y1="70" x2="564.78" y2="430" stroke="#1e202a"/>
+  <text x="564.78" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">14</text>
+  <line x1="598.70" y1="70" x2="598.70" y2="430" stroke="#1e202a"/>
+  <text x="598.70" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">15</text>
+  <line x1="632.61" y1="70" x2="632.61" y2="430" stroke="#1e202a"/>
+  <text x="632.61" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">16</text>
+  <line x1="666.52" y1="70" x2="666.52" y2="430" stroke="#1e202a"/>
+  <text x="666.52" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">17</text>
+  <line x1="700.43" y1="70" x2="700.43" y2="430" stroke="#1e202a"/>
+  <text x="700.43" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">18</text>
+  <line x1="734.35" y1="70" x2="734.35" y2="430" stroke="#1e202a"/>
+  <text x="734.35" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">19</text>
+  <line x1="768.26" y1="70" x2="768.26" y2="430" stroke="#1e202a"/>
+  <text x="768.26" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">20</text>
+  <line x1="802.17" y1="70" x2="802.17" y2="430" stroke="#1e202a"/>
+  <text x="802.17" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">21</text>
+  <line x1="836.09" y1="70" x2="836.09" y2="430" stroke="#1e202a"/>
+  <text x="836.09" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">22</text>
+  <line x1="870.00" y1="70" x2="870.00" y2="430" stroke="#1e202a"/>
+  <text x="870.00" y="454" fill="#787c8a" font-family="monospace" font-size="12" text-anchor="middle">23</text>
+  <text x="480.00" y="482" fill="#787c8a" font-family="monospace" font-size="13" text-anchor="middle">Generation</text>
+  <text x="22" y="250.00" fill="#787c8a" font-family="monospace" font-size="13" text-anchor="middle" transform="rotate(-90 22 250.00)">Fitness</text>
+  <polyline points="90.00,166.70 123.91,166.70 157.83,130.92 191.74,130.92 225.65,125.71 259.57,115.54 293.48,115.54 327.39,115.33 361.30,110.48 395.22,110.48 429.13,110.48 463.04,110.48 496.96,110.38 530.87,110.38 564.78,110.38 598.70,110.33 632.61,110.33 666.52,110.33 700.43,110.33 734.35,110.33 768.26,105.27 802.17,105.27 836.09,105.27 870.00,100.00" fill="none" stroke="#56c7d6" stroke-width="3"/>
+  <circle cx="90.00" cy="166.70" r="4" fill="#56c7d6"/>
+  <circle cx="123.91" cy="166.70" r="4" fill="#56c7d6"/>
+  <circle cx="157.83" cy="130.92" r="4" fill="#56c7d6"/>
+  <circle cx="191.74" cy="130.92" r="4" fill="#56c7d6"/>
+  <circle cx="225.65" cy="125.71" r="4" fill="#56c7d6"/>
+  <circle cx="259.57" cy="115.54" r="4" fill="#56c7d6"/>
+  <circle cx="293.48" cy="115.54" r="4" fill="#56c7d6"/>
+  <circle cx="327.39" cy="115.33" r="4" fill="#56c7d6"/>
+  <circle cx="361.30" cy="110.48" r="4" fill="#56c7d6"/>
+  <circle cx="395.22" cy="110.48" r="4" fill="#56c7d6"/>
+  <circle cx="429.13" cy="110.48" r="4" fill="#56c7d6"/>
+  <circle cx="463.04" cy="110.48" r="4" fill="#56c7d6"/>
+  <circle cx="496.96" cy="110.38" r="4" fill="#56c7d6"/>
+  <circle cx="530.87" cy="110.38" r="4" fill="#56c7d6"/>
+  <circle cx="564.78" cy="110.38" r="4" fill="#56c7d6"/>
+  <circle cx="598.70" cy="110.33" r="4" fill="#56c7d6"/>
+  <circle cx="632.61" cy="110.33" r="4" fill="#56c7d6"/>
+  <circle cx="666.52" cy="110.33" r="4" fill="#56c7d6"/>
+  <circle cx="700.43" cy="110.33" r="4" fill="#56c7d6"/>
+  <circle cx="734.35" cy="110.33" r="4" fill="#56c7d6"/>
+  <circle cx="768.26" cy="105.27" r="4" fill="#56c7d6"/>
+  <circle cx="802.17" cy="105.27" r="4" fill="#56c7d6"/>
+  <circle cx="836.09" cy="105.27" r="4" fill="#56c7d6"/>
+  <circle cx="870.00" cy="100.00" r="4" fill="#56c7d6"/>
+  <polyline points="90.00,400.00 123.91,269.67 157.83,186.14 191.74,164.29 225.65,153.14 259.57,140.71 293.48,147.05 327.39,129.76 361.30,132.39 395.22,125.45 429.13,132.50 463.04,128.85 496.96,140.90 530.87,129.38 564.78,122.78 598.70,128.09 632.61,119.35 666.52,128.59 700.43,128.86 734.35,135.63 768.26,136.64 802.17,126.56 836.09,119.05 870.00,116.14" fill="none" stroke="#a3d67a" stroke-width="3"/>
+  <circle cx="90.00" cy="400.00" r="4" fill="#a3d67a"/>
+  <circle cx="123.91" cy="269.67" r="4" fill="#a3d67a"/>
+  <circle cx="157.83" cy="186.14" r="4" fill="#a3d67a"/>
+  <circle cx="191.74" cy="164.29" r="4" fill="#a3d67a"/>
+  <circle cx="225.65" cy="153.14" r="4" fill="#a3d67a"/>
+  <circle cx="259.57" cy="140.71" r="4" fill="#a3d67a"/>
+  <circle cx="293.48" cy="147.05" r="4" fill="#a3d67a"/>
+  <circle cx="327.39" cy="129.76" r="4" fill="#a3d67a"/>
+  <circle cx="361.30" cy="132.39" r="4" fill="#a3d67a"/>
+  <circle cx="395.22" cy="125.45" r="4" fill="#a3d67a"/>
+  <circle cx="429.13" cy="132.50" r="4" fill="#a3d67a"/>
+  <circle cx="463.04" cy="128.85" r="4" fill="#a3d67a"/>
+  <circle cx="496.96" cy="140.90" r="4" fill="#a3d67a"/>
+  <circle cx="530.87" cy="129.38" r="4" fill="#a3d67a"/>
+  <circle cx="564.78" cy="122.78" r="4" fill="#a3d67a"/>
+  <circle cx="598.70" cy="128.09" r="4" fill="#a3d67a"/>
+  <circle cx="632.61" cy="119.35" r="4" fill="#a3d67a"/>
+  <circle cx="666.52" cy="128.59" r="4" fill="#a3d67a"/>
+  <circle cx="700.43" cy="128.86" r="4" fill="#a3d67a"/>
+  <circle cx="734.35" cy="135.63" r="4" fill="#a3d67a"/>
+  <circle cx="768.26" cy="136.64" r="4" fill="#a3d67a"/>
+  <circle cx="802.17" cy="126.56" r="4" fill="#a3d67a"/>
+  <circle cx="836.09" cy="119.05" r="4" fill="#a3d67a"/>
+  <circle cx="870.00" cy="116.14" r="4" fill="#a3d67a"/>
+  <polyline points="90.00,152.31 123.91,152.31 157.83,169.14 191.74,169.14 225.65,138.02 259.57,160.61 293.48,160.61 327.39,152.25 361.30,164.74 395.22,164.74 429.13,164.74 463.04,164.74 496.96,150.20 530.87,150.20 564.78,150.20 598.70,142.06 632.61,142.06 666.52,142.06 700.43,142.06 734.35,142.06 768.26,144.07 802.17,144.07 836.09,144.07 870.00,129.86" fill="none" stroke="#c48ad6" stroke-width="3"/>
+  <circle cx="90.00" cy="152.31" r="4" fill="#c48ad6"/>
+  <circle cx="123.91" cy="152.31" r="4" fill="#c48ad6"/>
+  <circle cx="157.83" cy="169.14" r="4" fill="#c48ad6"/>
+  <circle cx="191.74" cy="169.14" r="4" fill="#c48ad6"/>
+  <circle cx="225.65" cy="138.02" r="4" fill="#c48ad6"/>
+  <circle cx="259.57" cy="160.61" r="4" fill="#c48ad6"/>
+  <circle cx="293.48" cy="160.61" r="4" fill="#c48ad6"/>
+  <circle cx="327.39" cy="152.25" r="4" fill="#c48ad6"/>
+  <circle cx="361.30" cy="164.74" r="4" fill="#c48ad6"/>
+  <circle cx="395.22" cy="164.74" r="4" fill="#c48ad6"/>
+  <circle cx="429.13" cy="164.74" r="4" fill="#c48ad6"/>
+  <circle cx="463.04" cy="164.74" r="4" fill="#c48ad6"/>
+  <circle cx="496.96" cy="150.20" r="4" fill="#c48ad6"/>
+  <circle cx="530.87" cy="150.20" r="4" fill="#c48ad6"/>
+  <circle cx="564.78" cy="150.20" r="4" fill="#c48ad6"/>
+  <circle cx="598.70" cy="142.06" r="4" fill="#c48ad6"/>
+  <circle cx="632.61" cy="142.06" r="4" fill="#c48ad6"/>
+  <circle cx="666.52" cy="142.06" r="4" fill="#c48ad6"/>
+  <circle cx="700.43" cy="142.06" r="4" fill="#c48ad6"/>
+  <circle cx="734.35" cy="142.06" r="4" fill="#c48ad6"/>
+  <circle cx="768.26" cy="144.07" r="4" fill="#c48ad6"/>
+  <circle cx="802.17" cy="144.07" r="4" fill="#c48ad6"/>
+  <circle cx="836.09" cy="144.07" r="4" fill="#c48ad6"/>
+  <circle cx="870.00" cy="129.86" r="4" fill="#c48ad6"/>
+  <line x1="106" y1="92" x2="134" y2="92" stroke="#56c7d6" stroke-width="3"/>
+  <text x="142" y="96" fill="#dee0e8" font-family="monospace" font-size="12">Training best</text>
+  <line x1="316" y1="92" x2="344" y2="92" stroke="#a3d67a" stroke-width="3"/>
+  <text x="352" y="96" fill="#dee0e8" font-family="monospace" font-size="12">Training mean</text>
+  <line x1="526" y1="92" x2="554" y2="92" stroke="#c48ad6" stroke-width="3"/>
+  <text x="562" y="96" fill="#dee0e8" font-family="monospace" font-size="12">Held-out champion</text>
+</svg>
