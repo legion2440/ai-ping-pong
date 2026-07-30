@@ -32,24 +32,39 @@
 
 ### Клонирование и установка
 
-```powershell
+#### Windows (Git Bash)
+
+```bash
 git clone https://01.tomorrow-school.ai/git/nyestaye/ai-ping-pong
 cd ai-ping-pong
 
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+source .venv/Scripts/activate
 python -m pip install -r requirements.txt
 ```
 
+#### macOS / Linux
+
+```bash
+git clone https://01.tomorrow-school.ai/git/nyestaye/ai-ping-pong
+cd ai-ping-pong
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+Все команды ниже используют синтаксис Bash и работают в Git Bash на Windows и в стандартном терминале macOS или Linux после активации virtual environment.
+
 ### Запуск игры
 
-```powershell
+```bash
 python -m game.main
 ```
 
 Также поддерживается прямой запуск файла:
 
-```powershell
+```bash
 python game/main.py
 ```
 
@@ -156,11 +171,11 @@ Human vs Bot использует сохранённый глобально лу
 
 Каждый бот представлен тремя параметрами:
 
-| Параметр | Значение |
-|---|---|
-| `paddle_speed` | максимальная скорость перемещения ракетки в пикселях в секунду |
-| `reaction_time` | задержка между обновлениями цели |
-| `movement_threshold` | мёртвая зона вокруг целевой позиции |
+| Параметр             | Значение                                                       |
+|----------------------|----------------------------------------------------------------|
+| `paddle_speed`       | максимальная скорость перемещения ракетки в пикселях в секунду |
+| `reaction_time`      | задержка между обновлениями цели                               |
+| `movement_threshold` | мёртвая зона вокруг целевой позиции                            |
 
 Canonical promoted genome:
 
@@ -176,21 +191,21 @@ movement_threshold = 29.790193846648812
 
 Запуск детерминированного headless-обучения:
 
-```powershell
+```bash
 python -m ga.genetic_algorithm
 ```
 
 Пример небольшого пользовательского запуска:
 
-```powershell
-python -m ga.genetic_algorithm `
-    --population-size 8 `
+```bash
+python -m ga.genetic_algorithm \
+    --population-size 8 \
     --generations 3
 ```
 
 Также поддерживается прямой запуск:
 
-```powershell
+```bash
 python ga/genetic_algorithm.py --population-size 8 --generations 3
 ```
 
@@ -237,9 +252,9 @@ models/best_bot.json
 
 Пользовательские пути:
 
-```powershell
-python -m ga.genetic_algorithm `
-    --log-path custom/generations.csv `
+```bash
+python -m ga.genetic_algorithm \
+    --log-path custom/generations.csv \
     --model-path custom/best_bot.json
 ```
 
@@ -268,15 +283,15 @@ movement_threshold
 
 ### Canonical result
 
-| Метрика | Поколение 0 | Поколение 23 | Результат |
-|---|---:|---:|---:|
-| Средний training fitness | -144.814453125 | 198.83984375 | +343.654296875 |
-| Held-out fitness | 155.05 | 182.225 | +27.175 |
-| Финальный против начального | — | 13 побед / 27 ничьих / 0 поражений | 13:0 по очкам |
+| Метрика                     | Поколение 0    | Поколение 23                       | Результат      |
+|-----------------------------|---------------:|-----------------------------------:|---------------:|
+| Средний training fitness    | -144.814453125 | 198.83984375                       | +343.654296875 |
+| Held-out fitness            | 155.05         | 182.225                            | +27.175        |
+| Финальный против начального | —              | 13 побед / 27 ничьих / 0 поражений | 13:0 по очкам  |
 
 Запуск locked deterministic evaluation:
 
-```powershell
+```bash
 python -m ga.evaluation
 ```
 
@@ -328,10 +343,10 @@ Runtime difficulty доступна в обоих режимах через кл
 - `[` / `]` изменяют высоту обеих ракеток;
 - `T` включает и выключает автоматическое усложнение.
 
-| Настройка | Минимум | По умолчанию | Максимум | Шаг |
-|---|---:|---:|---:|---:|
-| Скорость мяча | `x0.50` | `x1.00` | `x2.00` | `0.10` |
-| Высота ракетки | `50 px` | `90 px` | `120 px` | `5 px` |
+| Настройка      | Минимум | По умолчанию | Максимум | Шаг    |
+|----------------|--------:|-------------:|---------:|-------:|
+| Скорость мяча  | `x0.50` | `x1.00`      | `x2.00`  | `0.10` |
+| Высота ракетки | `50 px` | `90 px`      | `120 px` | `5 px` |
 
 AUTO по умолчанию включён. Каждые 20 секунд активного матча он добавляет `0.10` к скорости мяча и убирает `5 px` от высоты ракеток независимо до указанных границ. Выключение AUTO ставит таймер на паузу, а повторное включение продолжает с сохранённого остатка. Ручные изменения не перезапускают таймер.
 
@@ -353,7 +368,7 @@ Screenshots:
 
 Пересоздание screenshots:
 
-```powershell
+```bash
 python -m tools.capture_screenshots
 ```
 
@@ -363,38 +378,38 @@ python -m tools.capture_screenshots
 
 Запуск локального сервера:
 
-```powershell
+```bash
 python -m api.main
 ```
 
 Также поддерживается прямой запуск файла:
 
-```powershell
+```bash
 python api/main.py
 ```
 
 Swagger UI доступен по адресу [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-| Метод | Endpoint | Ответ |
-|---|---|---|
-| `GET` | `/` | название API, read-only status, источник и URL документации |
-| `GET` | `/health` | состояние сервиса без чтения CSV |
-| `GET` | `/generations` | все поколения вместе с геномами |
-| `GET` | `/generations/{generation}` | одно поколение |
-| `GET` | `/fitness` | история fitness без геномов |
+| Метод | Endpoint                    | Ответ                                                       |
+|-------|-----------------------------|-------------------------------------------------------------|
+| `GET` | `/`                         | название API, read-only status, источник и URL документации |
+| `GET` | `/health`                   | состояние сервиса без чтения CSV                            |
+| `GET` | `/generations`              | все поколения вместе с геномами                             |
+| `GET` | `/generations/{generation}` | одно поколение                                              |
+| `GET` | `/fitness`                  | история fitness без геномов                                 |
 
 Примеры запросов:
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/generations
-Invoke-RestMethod http://127.0.0.1:8000/generations/23
-Invoke-RestMethod http://127.0.0.1:8000/fitness
+```bash
+curl -s http://127.0.0.1:8000/generations
+curl -s http://127.0.0.1:8000/generations/23
+curl -s http://127.0.0.1:8000/fitness
 ```
 
 Использование другого generation log:
 
-```powershell
-python -m api.main `
+```bash
+python -m api.main \
     --generations-path custom/generations.csv
 ```
 
@@ -402,15 +417,15 @@ python -m api.main `
 
 ## 🧰 Стек технологий
 
-| Слой | Технология |
-|---|---|
-| Язык | Python |
-| Визуальный frontend | Pygame `2.6.1` |
-| Read-only API | FastAPI `0.139.2`, Uvicorn `0.51.0` |
-| Симуляция | собственная детерминированная 2D-физика |
-| Эволюция | собственный генетический алгоритм |
-| Артефакты | JSON, CSV, SVG, PNG |
-| Тесты | Python `unittest` |
+| Слой                | Технология                              |
+|---------------------|-----------------------------------------|
+| Язык                | Python                                  |
+| Визуальный frontend | Pygame `2.6.1`                          |
+| Read-only API       | FastAPI `0.139.2`, Uvicorn `0.51.0`     |
+| Симуляция           | собственная детерминированная 2D-физика |
+| Эволюция            | собственный генетический алгоритм       |
+| Артефакты           | JSON, CSV, SVG, PNG                     |
+| Тесты               | Python `unittest`                       |
 
 Внешний dataset не используется. Обучающие данные создаются детерминированными simulated matches.
 
@@ -418,13 +433,13 @@ python -m api.main `
 
 Запуск всех тестов:
 
-```powershell
+```bash
 python -m unittest discover -s tests -v
 ```
 
 Дополнительные проверки:
 
-```powershell
+```bash
 python -m compileall api game ga tools tests
 python -m pip check
 ```

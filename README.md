@@ -32,24 +32,39 @@ The project includes Human vs Bot and Bot vs Bot modes, headless training and ma
 
 ### Clone and install
 
-```powershell
+#### Windows (Git Bash)
+
+```bash
 git clone https://01.tomorrow-school.ai/git/nyestaye/ai-ping-pong
 cd ai-ping-pong
 
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+source .venv/Scripts/activate
 python -m pip install -r requirements.txt
 ```
 
+#### macOS / Linux
+
+```bash
+git clone https://01.tomorrow-school.ai/git/nyestaye/ai-ping-pong
+cd ai-ping-pong
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+The commands below use Bash syntax and work in Git Bash on Windows and in the standard terminal on macOS or Linux after the virtual environment is activated.
+
 ### Run the game
 
-```powershell
+```bash
 python -m game.main
 ```
 
 Direct script execution is also supported:
 
-```powershell
+```bash
 python game/main.py
 ```
 
@@ -156,11 +171,11 @@ The core game state is independent from the display. Training and evaluation use
 
 Each bot is represented by three parameters:
 
-| Parameter | Meaning |
-|---|---|
-| `paddle_speed` | maximum paddle movement speed in pixels per second |
-| `reaction_time` | delay between target updates |
-| `movement_threshold` | dead zone around the target position |
+| Parameter            | Meaning                                            |
+|----------------------|----------------------------------------------------|
+| `paddle_speed`       | maximum paddle movement speed in pixels per second |
+| `reaction_time`      | delay between target updates                       |
+| `movement_threshold` | dead zone around the target position               |
 
 Canonical promoted genome:
 
@@ -176,21 +191,21 @@ The controller updates its target from the ball position according to `reaction_
 
 Run deterministic headless training:
 
-```powershell
+```bash
 python -m ga.genetic_algorithm
 ```
 
 Example with a smaller custom run:
 
-```powershell
-python -m ga.genetic_algorithm `
-    --population-size 8 `
+```bash
+python -m ga.genetic_algorithm \
+    --population-size 8 \
     --generations 3
 ```
 
 Direct script execution is also supported:
 
-```powershell
+```bash
 python ga/genetic_algorithm.py --population-size 8 --generations 3
 ```
 
@@ -237,9 +252,9 @@ models/best_bot.json
 
 Use custom paths with:
 
-```powershell
-python -m ga.genetic_algorithm `
-    --log-path custom/generations.csv `
+```bash
+python -m ga.genetic_algorithm \
+    --log-path custom/generations.csv \
     --model-path custom/best_bot.json
 ```
 
@@ -268,15 +283,15 @@ movement_threshold
 
 ### Canonical result
 
-| Metric | Generation 0 | Generation 23 | Result |
-|---|---:|---:|---:|
-| Training mean fitness | -144.814453125 | 198.83984375 | +343.654296875 |
-| Held-out fitness | 155.05 | 182.225 | +27.175 |
-| Final vs initial | — | 13 W / 27 D / 0 L | 13:0 points |
+| Metric                | Generation 0   | Generation 23     | Result         |
+|-----------------------|---------------:|------------------:|---------------:|
+| Training mean fitness | -144.814453125 | 198.83984375      | +343.654296875 |
+| Held-out fitness      | 155.05         | 182.225           | +27.175        |
+| Final vs initial      | —              | 13 W / 27 D / 0 L | 13:0 points    |
 
 Run the locked deterministic evaluation:
 
-```powershell
+```bash
 python -m ga.evaluation
 ```
 
@@ -328,9 +343,9 @@ Runtime difficulty is available in both game modes through the clickable bottom 
 - `[` / `]` changes both paddle heights;
 - `T` toggles automatic gradual difficulty.
 
-| Setting | Minimum | Default | Maximum | Step |
-|---|---:|---:|---:|---:|
-| Ball speed | `x0.50` | `x1.00` | `x2.00` | `0.10` |
+| Setting       | Minimum | Default | Maximum  | Step   |
+|---------------|--------:|--------:|---------:|-------:|
+| Ball speed    | `x0.50` | `x1.00` | `x2.00`  | `0.10` |
 | Paddle height | `50 px` | `90 px` | `120 px` | `5 px` |
 
 AUTO is ON by default. Every 20 seconds of active match time it adds `0.10` to ball speed and removes `5 px` from paddle height, independently clamped to the limits above. Turning AUTO off pauses its timer; turning it back on resumes from the saved remainder. Manual changes do not restart that timer.
@@ -353,7 +368,7 @@ Screenshots:
 
 Regenerate them with:
 
-```powershell
+```bash
 python -m tools.capture_screenshots
 ```
 
@@ -363,38 +378,38 @@ The FastAPI service provides read-only access to the current generation and fitn
 
 Start the local server:
 
-```powershell
+```bash
 python -m api.main
 ```
 
 Direct script execution is also supported:
 
-```powershell
+```bash
 python api/main.py
 ```
 
 Swagger UI is available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-| Method | Endpoint | Response |
-|---|---|---|
-| `GET` | `/` | API name, read-only status, source, and docs URL |
-| `GET` | `/health` | service health without reading the CSV |
-| `GET` | `/generations` | all generation records including genomes |
-| `GET` | `/generations/{generation}` | one generation record |
-| `GET` | `/fitness` | fitness history without genomes |
+| Method | Endpoint                    | Response                                         |
+|--------|-----------------------------|--------------------------------------------------|
+| `GET`  | `/`                         | API name, read-only status, source, and docs URL |
+| `GET`  | `/health`                   | service health without reading the CSV           |
+| `GET`  | `/generations`              | all generation records including genomes         |
+| `GET`  | `/generations/{generation}` | one generation record                            |
+| `GET`  | `/fitness`                  | fitness history without genomes                  |
 
 Example requests:
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/generations
-Invoke-RestMethod http://127.0.0.1:8000/generations/23
-Invoke-RestMethod http://127.0.0.1:8000/fitness
+```bash
+curl -s http://127.0.0.1:8000/generations
+curl -s http://127.0.0.1:8000/generations/23
+curl -s http://127.0.0.1:8000/fitness
 ```
 
 Use another generation log:
 
-```powershell
-python -m api.main `
+```bash
+python -m api.main \
     --generations-path custom/generations.csv
 ```
 
@@ -402,15 +417,15 @@ Without this option the API uses the canonical project-root `logs/generations.cs
 
 ## 🧰 Technology stack
 
-| Layer | Technology |
-|---|---|
-| Language | Python |
-| Visual frontend | Pygame `2.6.1` |
-| Read-only API | FastAPI `0.139.2`, Uvicorn `0.51.0` |
-| Simulation | custom deterministic 2D physics |
-| Evolution | custom genetic algorithm |
-| Artifacts | JSON, CSV, SVG, PNG |
-| Tests | Python `unittest` |
+| Layer           | Technology                          |
+|-----------------|-------------------------------------|
+| Language        | Python                              |
+| Visual frontend | Pygame `2.6.1`                      |
+| Read-only API   | FastAPI `0.139.2`, Uvicorn `0.51.0` |
+| Simulation      | custom deterministic 2D physics     |
+| Evolution       | custom genetic algorithm            |
+| Artifacts       | JSON, CSV, SVG, PNG                 |
+| Tests           | Python `unittest`                   |
 
 No external dataset is used. Training data is generated by deterministic simulated matches.
 
@@ -418,13 +433,13 @@ No external dataset is used. Training data is generated by deterministic simulat
 
 Run all tests:
 
-```powershell
+```bash
 python -m unittest discover -s tests -v
 ```
 
 Additional checks:
 
-```powershell
+```bash
 python -m compileall api game ga tools tests
 python -m pip check
 ```
