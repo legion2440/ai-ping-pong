@@ -886,7 +886,11 @@ class FrontendRenderingTests(unittest.TestCase):
         self.game.start(BOTVBOT)
         self.game.change_generation("left", 1)
 
-        with patch("game.main.draw_text") as draw_text_mock:
+        with patch(
+            "game.main.draw_text"
+        ) as draw_text_mock, patch(
+            "game.main.pygame.draw.polygon"
+        ) as draw_polygon:
             self.game.draw_hud()
 
         texts = self._drawn_texts(draw_text_mock)
@@ -895,6 +899,9 @@ class FrontendRenderingTests(unittest.TestCase):
         self.assertIn("TRAIN FITNESS 20.0", texts)
         self.assertIn("TRAIN FITNESS 10.5", texts)
         self.assertIn("BOT VS BOT", texts)
+        self.assertNotIn("◀", texts)
+        self.assertNotIn("▶", texts)
+        self.assertEqual(draw_polygon.call_count, 4)
         self.assertEqual(
             [
                 (side, offset, enabled)

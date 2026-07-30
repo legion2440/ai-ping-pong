@@ -400,6 +400,46 @@ class Game:
             center=True,
         )
 
+    def _draw_generation_arrow(
+        self,
+        rect,
+        direction,
+        color,
+        enabled=True,
+    ):
+        border_color = color if enabled else COLORS["border"]
+        icon_color = color if enabled else COLORS["muted"]
+        pygame.draw.rect(
+            self.screen,
+            COLORS["panel"],
+            rect,
+            border_radius=3,
+        )
+        pygame.draw.rect(
+            self.screen,
+            border_color,
+            rect,
+            width=1,
+            border_radius=3,
+        )
+
+        center_x, center_y = rect.center
+        if direction == "left":
+            points = (
+                (center_x + 4, center_y - 6),
+                (center_x - 4, center_y),
+                (center_x + 4, center_y + 6),
+            )
+        elif direction == "right":
+            points = (
+                (center_x - 4, center_y - 6),
+                (center_x + 4, center_y),
+                (center_x - 4, center_y + 6),
+            )
+        else:
+            raise ValueError("direction must be 'left' or 'right'")
+        pygame.draw.polygon(self.screen, icon_color, points)
+
     def _draw_generation_selector(
         self,
         side,
@@ -414,15 +454,15 @@ class Game:
         previous_enabled = index > 0
         next_enabled = index < len(self.generation_records) - 1
 
-        self._draw_control_button(
+        self._draw_generation_arrow(
             previous_rect,
-            "◀",
+            "left",
             color,
             previous_enabled,
         )
-        self._draw_control_button(
+        self._draw_generation_arrow(
             next_rect,
-            "▶",
+            "right",
             color,
             next_enabled,
         )
