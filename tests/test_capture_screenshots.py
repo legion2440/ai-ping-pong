@@ -14,6 +14,7 @@ from tools.capture_screenshots import (
     SCREENSHOT_DT,
     SCREENSHOT_SEED,
     SCREENSHOT_STEPS,
+    _save_screen,
     main,
 )
 
@@ -55,10 +56,25 @@ class ScreenshotCaptureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_artifacts(root)
+            capture_states = []
+
+            def save_screen(game, path):
+                capture_states.append(
+                    (
+                        path.name,
+                        game.difficulty.ball_speed_multiplier,
+                        game.difficulty.paddle_height,
+                        game.difficulty.auto_enabled,
+                    )
+                )
+                _save_screen(game, path)
 
             with patch(
                 "tools.capture_screenshots.PROJECT_ROOT",
                 root,
+            ), patch(
+                "tools.capture_screenshots._save_screen",
+                side_effect=save_screen,
             ):
                 main()
 
@@ -75,6 +91,14 @@ class ScreenshotCaptureTests(unittest.TestCase):
                     self.assertEqual(image.get_size(), (SCREEN_W, SCREEN_H))
                     colors = pygame.transform.average_color(image)
                     self.assertNotEqual(colors[:3], (0, 0, 0))
+            self.assertEqual(
+                capture_states,
+                [
+                    ("menu.png", 1.0, 90, False),
+                    ("generation-0.png", 1.0, 90, False),
+                    ("generation-final.png", 1.0, 90, False),
+                ],
+            )
             first_capture = {
                 path.name: path.read_bytes()
                 for path in paths

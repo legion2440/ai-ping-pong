@@ -124,6 +124,25 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         self.assertIs(self.game.right_controller.genome, BEST_GENOME)
         self.assertNotEqual(self.game.right_controller.genome, BASELINE_GENOME)
 
+    def test_both_modes_start_with_manual_default_difficulty(self):
+        for state in (HUMAN, BOTVBOT):
+            with self.subTest(state=state):
+                self.game.set_auto_difficulty(True)
+                self.game.difficulty.adjust_ball_speed(2)
+                self.game.difficulty.adjust_paddle_height(-2)
+
+                self.game.start(state)
+
+                self.assertEqual(
+                    (
+                        self.game.difficulty.ball_speed_multiplier,
+                        self.game.difficulty.paddle_height,
+                        self.game.difficulty.auto_enabled,
+                        self.game.difficulty.elapsed,
+                    ),
+                    (1.0, 90, False, 0.0),
+                )
+
     def test_bot_vs_bot_starts_with_two_independent_generation_zero_bots(self):
         self.game.start(BOTVBOT)
 
@@ -153,6 +172,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
 
     def test_left_and_right_generations_change_independently(self):
         self.game.start(BOTVBOT)
+        self.game.set_auto_difficulty(True)
 
         self.game.handle_event(
             pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d)
@@ -173,6 +193,9 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
             self.game.right_controller.genome,
             GENERATION_RECORDS[0].genome,
         )
+        self.assertFalse(self.game.difficulty.auto_enabled)
+
+        self.game.set_auto_difficulty(True)
 
         self.game.handle_event(
             pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
@@ -193,6 +216,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
             self.game.right_controller.genome,
             GENERATION_RECORDS[1].genome,
         )
+        self.assertFalse(self.game.difficulty.auto_enabled)
 
         self.game.handle_event(
             pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)
@@ -294,7 +318,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
 
         self.game.change_ball_speed(2)
         self.game.change_paddle_size(-2)
-        self.game.set_auto_difficulty(False)
+        self.game.set_auto_difficulty(True)
         self.game.difficulty.elapsed = 9.0
         self.game.change_generation("right", 1)
 
@@ -331,7 +355,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
                 self.game.difficulty.auto_enabled,
                 self.game.difficulty.elapsed,
             ),
-            (1.0, 90, True, 0.0),
+            (1.0, 90, False, 0.0),
         )
         self.assertIs(
             self.game.left_controller.genome,
@@ -347,6 +371,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
         self.game.change_generation("left", 1)
         self.game.change_generation("right", 1)
         self.game.change_ball_speed(1)
+        self.game.set_auto_difficulty(True)
         self.assertEqual(
             (
                 self.game.left_generation_index,
@@ -372,7 +397,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
                 self.game.difficulty.auto_enabled,
                 self.game.difficulty.elapsed,
             ),
-            (1.0, 90, True, 0.0),
+            (1.0, 90, False, 0.0),
         )
         self.assertIs(
             self.game.left_controller.genome,
@@ -485,6 +510,7 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
 
     def test_auto_difficulty_applies_after_simulation_and_catches_up(self):
         self.game.start(BOTVBOT)
+        self.game.set_auto_difficulty(True)
         events = []
         difficulty = self.game.difficulty
 
@@ -668,6 +694,33 @@ class FrontendControllerIntegrationTests(unittest.TestCase):
             [call(-1), call(-1)],
         )
         self.assertEqual(toggle_auto.call_count, 2)
+
+    def test_keyboard_and_mouse_enable_auto_from_default_off(self):
+        self.game.start(HUMAN)
+        self.assertFalse(self.game.difficulty.auto_enabled)
+
+        self.game.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t)
+        )
+        self.assertTrue(self.game.difficulty.auto_enabled)
+
+        self.game.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t)
+        )
+        self.assertFalse(self.game.difficulty.auto_enabled)
+
+        auto_rect = pygame.Rect(10, 10, 20, 20)
+        self.game.difficulty_buttons = [
+            (auto_rect, "auto", None, True)
+        ]
+        self.game.handle_event(
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN,
+                pos=auto_rect.center,
+                button=1,
+            )
+        )
+        self.assertTrue(self.game.difficulty.auto_enabled)
 
     def test_disabled_generation_button_is_a_complete_no_op(self):
         self.game.start(BOTVBOT)
@@ -940,7 +993,7 @@ class FrontendRenderingTests(unittest.TestCase):
                 self.assertIn("PADDLE SIZE", texts)
                 self.assertIn("90 px", texts)
                 self.assertIn("AUTO", texts)
-                self.assertIn("ON", texts)
+                self.assertIn("OFF", texts)
                 self.assertIn(expected, texts)
                 self.assertEqual(len(self.game.difficulty_buttons), 5)
 

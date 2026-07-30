@@ -189,6 +189,8 @@ The controller updates its target from the ball position according to `reaction_
 
 ## 🧠 Genetic algorithm
 
+Blend crossover recombines values within the parental range, while mutation provides exploration outside the current population range.
+
 Run deterministic headless training:
 
 ```bash
@@ -225,6 +227,8 @@ python ga/genetic_algorithm.py --population-size 8 --generations 3
 - Score weight: `100.0`
 - Return weight: `1.0`
 
+These CLI defaults are intended for a shorter demonstration run. The command below reproduces the canonical configuration used for the committed artifacts.
+
 ### Canonical training run
 
 The committed model and history were produced with:
@@ -242,6 +246,27 @@ The committed model and history were produced with:
 - Baseline opponent: `260,0,8`
 - Score weight: `100.0`
 - Return weight: `1.0`
+
+```bash
+python -m ga.genetic_algorithm \
+    --seed 20260730 \
+    --population-size 32 \
+    --generations 24 \
+    --elite-count 4 \
+    --tournament-size 4 \
+    --crossover-rate 0.8 \
+    --mutation-rate 0.2 \
+    --mutation-sigma 0.1 \
+    --match-seeds 2000,2001,2002,2003,2004,2005,2006,2007 \
+    --match-dt 0.016666666666666666 \
+    --match-max-steps 3600 \
+    --match-score-limit 5 \
+    --opponent 260,0,8 \
+    --score-weight 100 \
+    --return-weight 1
+```
+
+The command above reproduces the canonical configuration. It is documented here for reproducibility; the existing committed artifacts are not regenerated as part of this change.
 
 The training command writes:
 
@@ -289,6 +314,8 @@ movement_threshold
 | Held-out fitness      | 155.05         | 182.225           | +27.175        |
 | Final vs initial      | —              | 13 W / 27 D / 0 L | 13:0 points    |
 
+Population mean fitness may fluctuate between generations because crossover and mutation introduce new candidates. The reported improvement is the overall change from generation 0 to generation 23.
+
 Run the locked deterministic evaluation:
 
 ```bash
@@ -301,6 +328,8 @@ Artifacts:
 
 - [Full deterministic evaluation report](reports/evaluation.json)
 - [Fitness progress chart](docs/fitness_progress.svg)
+
+The fitness chart is generated as deterministic SVG without an external plotting library.
 
 ![Training and held-out fitness by generation](docs/fitness_progress.svg)
 
@@ -348,15 +377,15 @@ Runtime difficulty is available in both game modes through the clickable bottom 
 | Ball speed    | `x0.50` | `x1.00` | `x2.00`  | `0.10` |
 | Paddle height | `50 px` | `90 px` | `120 px` | `5 px` |
 
-AUTO is ON by default. Every 20 seconds of active match time it adds `0.10` to ball speed and removes `5 px` from paddle height, independently clamped to the limits above. Turning AUTO off pauses its timer; turning it back on resumes from the saved remainder. Manual changes do not restart that timer.
+AUTO is OFF by default and can be enabled with the clickable AUTO control or the `T` key. Once enabled, every 20 seconds of active match time it adds `0.10` to ball speed and removes `5 px` from paddle height, independently clamped to the limits above. Turning AUTO off pauses its timer; turning it back on resumes from the saved remainder. Manual changes do not restart that timer.
 
-Changing difficulty preserves the score, current rally, entity positions, and controllers. Paddle resizing preserves each center before clamping it to the court. A goal preserves difficulty, and the next serve uses the current speed multiplier. A real generation change or entering a new mode resets the match and difficulty; pressing a disabled generation boundary control changes nothing.
+Changing difficulty preserves the score, current rally, entity positions, and controllers. Paddle resizing preserves each center before clamping it to the court. A goal preserves difficulty, and the next serve uses the current speed multiplier. A real generation change or entering a new mode resets difficulty to ball speed `x1.00`, paddle height `90 px`, and AUTO OFF; pressing a disabled generation boundary control changes nothing.
 
 Training fitness values were produced under the canonical default environment: ball speed `x1.00` and paddle height `90 px`, without runtime difficulty adjustments. `TRAIN FITNESS` ranks generation champions only under those training conditions.
 
 Manual or automatic difficulty changes create an out-of-training stress-test environment. Because genome parameters such as `movement_threshold` are absolute pixel values, changing ball speed or paddle height can change the relative performance of generations. An earlier generation may therefore beat a later generation under custom difficulty settings without contradicting the recorded training progress.
 
-For a like-for-like generation comparison, use ball speed `x1.00`, paddle height `90 px`, and set AUTO to OFF.
+For a like-for-like generation comparison, keep the application defaults: ball speed `x1.00`, paddle height `90 px`, and AUTO OFF.
 
 Screenshots:
 

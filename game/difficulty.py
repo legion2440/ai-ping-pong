@@ -38,7 +38,7 @@ def _validate_step_count(value):
 class DifficultyState:
     ball_speed_multiplier: float = BALL_SPEED_DEFAULT
     paddle_height: int = PADDLE_HEIGHT_DEFAULT
-    auto_enabled: bool = True
+    auto_enabled: bool = False
     elapsed: float = 0.0
 
     def __post_init__(self):
@@ -78,7 +78,7 @@ class DifficultyState:
     def reset(self):
         self.ball_speed_multiplier = BALL_SPEED_DEFAULT
         self.paddle_height = PADDLE_HEIGHT_DEFAULT
-        self.auto_enabled = True
+        self.auto_enabled = False
         self.elapsed = 0.0
 
     def set_auto(self, enabled):

@@ -26,14 +26,14 @@ class DifficultyStateTests(unittest.TestCase):
             (
                 BALL_SPEED_DEFAULT,
                 PADDLE_HEIGHT_DEFAULT,
-                True,
+                False,
                 0.0,
             ),
         )
 
         state.adjust_ball_speed(3)
         state.adjust_paddle_height(-4)
-        state.set_auto(False)
+        state.set_auto(True)
         state.elapsed = 7.5
         state.reset()
 
@@ -47,7 +47,7 @@ class DifficultyStateTests(unittest.TestCase):
             (
                 BALL_SPEED_DEFAULT,
                 PADDLE_HEIGHT_DEFAULT,
-                True,
+                False,
                 0.0,
             ),
         )
@@ -73,6 +73,7 @@ class DifficultyStateTests(unittest.TestCase):
 
     def test_auto_level_is_applied_after_exact_interval(self):
         state = DifficultyState()
+        state.set_auto(True)
 
         self.assertEqual(state.update(AUTO_INTERVAL - 0.25), 0)
         self.assertEqual(state.ball_speed_multiplier, 1.0)
@@ -85,6 +86,7 @@ class DifficultyStateTests(unittest.TestCase):
 
     def test_large_dt_applies_multiple_levels_and_keeps_remainder(self):
         state = DifficultyState()
+        state.set_auto(True)
 
         self.assertEqual(state.update(AUTO_INTERVAL * 3 + 5.0), 3)
 
@@ -94,6 +96,7 @@ class DifficultyStateTests(unittest.TestCase):
 
     def test_auto_off_pauses_and_resume_uses_saved_elapsed(self):
         state = DifficultyState()
+        self.assertTrue(state.set_auto(True))
         state.update(12.0)
 
         self.assertTrue(state.set_auto(False))
@@ -107,6 +110,7 @@ class DifficultyStateTests(unittest.TestCase):
 
     def test_manual_changes_do_not_reset_elapsed(self):
         state = DifficultyState()
+        state.set_auto(True)
         state.update(7.25)
 
         state.adjust_ball_speed(1)
